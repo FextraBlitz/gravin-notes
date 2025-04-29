@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import NavBar from './comoponents/NavBar.vue';
-
+import NavBar from './components/NavBar.vue';
+const route = useRoute()
 </script>
 
 <template>
-  
-  <div class="bg-radial from-violet-600 to-indigo-600 h-[200lvh]">
-    <NavBar />
+  <div>
+    <NavBar v-if="!route.meta.hideNavbar" />
     <NuxtPage />
   </div>
 </template>
