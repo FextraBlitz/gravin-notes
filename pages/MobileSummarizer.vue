@@ -29,7 +29,7 @@
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/cpu.svg" alt="AI" class="nav-icon"/>
           AI
         </div>
-        <div class="nav-item" @click="goToNotes">
+        <div class="nav-item" @click="$emit('navigateToNotes')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Notes" class="nav-icon"/>
           Notes
         </div>
@@ -68,7 +68,7 @@
   };
   const goToNotes = () => 
   {
-    router.push('/notes');
+    router.push('/MobileNotes');
   };
   const goToMore = () => 
   {

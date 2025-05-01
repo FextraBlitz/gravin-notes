@@ -6,33 +6,29 @@
           </div>
       </div>
       <div class="options-list">
-        <div class="option-item" @click="goToManageNotes">
+        <div class="option-item" @click="$emit('navigateToNotes')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/edit.svg" alt="Manage Notes" class="option-icon"/>
           Manage Notes
         </div>
-        <div class="option-item" @click="goToRecentlyDeleted">
+        <div class="option-item" @click="$emit('navigateToDeletedNotes')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trash-2.svg" alt="Recently Deleted Notes" class="option-icon"/>
           Recently Deleted Notes
         </div>
-        <div class="option-item" @click="goToManageAccount">
+        <div class="option-item" @click="$emit('navigateToAccount')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user.svg" alt="Manage your account" class="option-icon"/>
           Manage your account
         </div>
-        <div class="option-item" @click="goToDeleteAccount">
+        <div class="option-item" @click="$emit('navigateToDeleteAccount')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user-x.svg" alt="Delete account" class="option-icon"/>
           Delete account
         </div>
-        <div class="option-item" @click="goToAbout">
+        <div class="option-item" @click="$emit('navigateToAboutUs')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/info.svg" alt="About" class="option-icon"/>
           About
         </div>
-        <div class="option-item" @click="goToFAQ">
+        <div class="option-item" @click="$emit('navigateToFAQ')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/help-circle.svg" alt="FAQ" class="option-icon"/>
           FAQ
-        </div>
-        <div class="option-item" @click="goToSettings">
-          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/settings.svg" alt="Settings" class="option-icon"/>
-          Settings
         </div>
       </div>
       <div class="contact-us">
@@ -69,7 +65,7 @@
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/cpu.svg" alt="AI" class="nav-icon"/>
           AI
         </div>
-        <div class="nav-item" @click="goToNotes">
+        <div class="nav-item" @click="$emit('navigateToNotes')">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Notes" class="nav-icon"/>
           Notes
         </div>
@@ -88,7 +84,7 @@
   
   const goToManageNotes = () => 
   {
-    router.push('/manage-notes'); //  Adjust the route
+    router.push('/MobileNotes'); //  Adjust the route
   };
   const goToRecentlyDeleted = () => 
   {
@@ -104,17 +100,13 @@
   };
   const goToAbout = () => 
   {
-    router.push('/about'); //  Adjust the route
+    router.push('/MobileAboutUs'); //  Adjust the route
   };
   const goToFAQ = () => 
   {
-    router.push('/faq'); //  Adjust the route
+    router.push('/MobileFAQ'); //  Adjust the route
   };
-  const goToSettings = () => 
-  {
-    router.push('/settings'); //  Adjust the route
-  };
-  
+
   const goToHome = () => 
   {
     router.push('/MobileHomepage');
@@ -125,7 +117,7 @@
   };
   const goToNotes = () => 
   {
-    router.push('/notes');
+    router.push('/MobileNotes');
   };
   const goToMore = () => 
   {
