@@ -9,5 +9,9 @@
     body {
       @apply text-black;
     }
+    
+    .custom-textarea {
+      @apply h-full resize-none text-sm;
+    }
 }
 

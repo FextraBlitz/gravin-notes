@@ -5,7 +5,7 @@ const isActive = ref(false)
 </script>
 
 <template>
-    <div :class="['top-[2rem] left-0 w-[300px] shrink-0 bg-amber-100 ', isActive ? 'h-[calc(100vh-2rem)] sticky' : 'h-fit fixed']">
+    <div :class="['top-[2rem] float-left left-0 w-[22.5%] shrink-0 bg-amber-100 ', isActive ? 'h-[calc(100vh-2rem)] sticky' : 'h-fit fixed']">
         <div class="w-full h-15 flex bg-red-200">
             <div @click="isActive = !isActive" class='h-full aspect-1/1 overflow-hidden bg-green-200 m-0 p-0'>
                 H

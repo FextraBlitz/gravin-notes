@@ -3,38 +3,42 @@ import { ref } from 'vue'
 
 import SideBarLeft from '~/components/editor/SideBarLeft.vue';
 import SideBarRight from '~/components/editor/SideBarRight.vue';
+import RegularText from '~/components/editor/content-types/RegularText.vue';
 
 const currentTextboxText = ref('')
+const renderMarkdown = ref(false)
 
 definePageMeta({
-    hideNavbar: true
+    hideDefaultNavbar: true
 });
 </script>
 
 <template>
-  <div class="flex flex-col lg:flex-row bg-amber-200 pt-8 lg:pt-0">
+  <EditorNavBar/>
+  <div class="flex bg-amber-200">
     <!-- Navbar for mobile -->
-    <EditorNavBar class="block lg:hidden mb-4" />
+
 
     <!-- Left Sidebar -->
-    <SideBarLeft class="hidden lg:block w-full lg:w-1/4" />
-
+    <SideBarLeft/>
+    
     <!-- Main Content -->
-    <div class="h-full flex flex-col w-full lg:w-1/2 justify-center items-center p-4">
-      <div class="text-center mb-4">Editor Page Content, Open NOTEBOOK here</div>
-      <div v-for="item in 50" :key="'item-' + item" class="text-sm">
+    <div class="h-full px-2 flex flex-col w-full justify-center items-center whitespace-pre-wrap break-words overflow-y-auto">
+      <RegularText :text="currentTextboxText"/>
+      <div class="text-center">Editor Page Content, Open NOTEBOOK here</div>
+      <div v-for="item in 50" :key="'item-' + item">
         test {{ item }}
       </div>
-      <div class="text-justify my-4">
+      <div class="text-justify">
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Expedita repellendus, aliquam eaque cupiditate eveniet laborum tenetur suscipit est quos nam quo? Eaque animi ab explicabo nobis, quae veniam soluta omnis?
       </div>
-      <div v-for="item in 100" :key="'item-100-' + item" class="text-sm">
+      <div v-for="item in 100" :key="'item-100-' + item">
         test {{ item }}
       </div>
     </div>
 
     <!-- Right Sidebar -->
-    <SideBarRight class="hidden lg:block w-full lg:w-1/4" v-model="currentTextboxText"/>
+    <SideBarRight v-model="currentTextboxText"/>
   </div>
 </template>
 
