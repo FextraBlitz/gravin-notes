@@ -5,6 +5,7 @@ import MobileHomepage from './pages/MobileHomepage.vue';
 import MobileSummarizer from './pages/MobileSummarizer.vue';
 import MobileOptions from './pages/MobileOptions.vue';
 import MobileLogin from './pages/MobileLogin.vue';
+import MobileSignup from './pages/MobileSignup.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 
 // State to track if the user is on mobile
@@ -20,6 +21,7 @@ const showMobileHomepage = ref(false);
 const showMobileSummarizer = ref(false);
 const showMobileOptions = ref(false);
 const showMobileLogin = ref(false);
+const showMobileSignup = ref(false);
 
 // Function to update the device type
 function updateDeviceType() {
@@ -34,6 +36,7 @@ const navigateToMobileHomepage = () =>
     showMobileSummarizer.value = false;
     showMobileOptions.value = false;
     showMobileLogin.value = false;
+    showMobileSignup.value = false;
   }
 };
 
@@ -48,6 +51,17 @@ const navigateToMobileLogin = () =>
   }
 };
 
+const navigateToMobileSignup = () => 
+{
+  if (isMobile.value) {
+    showMobileHomepage.value = false;
+    showMobileSummarizer.value = false;
+    showMobileOptions.value = false;
+    showMobileLogin.value = false;
+    showMobileSignup.value = true;
+  }
+};
+
 // Function to navigate to the mobile summarizer
 const navigateToMobileSummarizer = () => 
 {
@@ -56,6 +70,7 @@ const navigateToMobileSummarizer = () =>
     showMobileSummarizer.value = true;
     showMobileOptions.value = false;
     showMobileLogin.value = false;
+    showMobileSignup.value = false;
   }
 };
 
@@ -67,6 +82,7 @@ const navigateToMobileOptions = () =>
     showMobileSummarizer.value = false;
     showMobileOptions.value = true;
     showMobileLogin.value = false;
+    showMobileSignup.value = false;
   }
 };
 
@@ -79,6 +95,7 @@ const navigateToLandingPage = () =>
     showMobileSummarizer.value = false;
     showMobileOptions.value = false;
     showMobileLogin.value = false;
+    showMobileSignup.value = false;
   }
 };
 
@@ -101,6 +118,12 @@ onUnmounted(() =>
     <MobileLogin
       v-if="isMobile && showMobileLogin"
       @navigateToHomepage="navigateToMobileHomepage"
+      @navigateToSignup="navigateToMobileSignup"
+    />
+    <MobileSignup
+      v-if="isMobile && showMobileSignup"
+      @navigateToHomepage="navigateToMobileHomepage"
+      @navigateToLogin="navigateToMobileLogin"
     />
     <!-- Show MobileOptions if navigated and on mobile -->
     <MobileOptions

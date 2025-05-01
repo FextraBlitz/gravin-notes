@@ -33,7 +33,7 @@
         </button>
         <div class="signup-prompt">
           Don't have an account?
-          <a href="#" class="signup-link" @click="goToSignup">Sign up here</a>
+          <a href="#" class="signup-link" @click="$emit('navigateToSignup')">Sign up here</a>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@ const login = () =>
 };
 
 const goToSignup = () => {
-  router.push('/signup'); // Navigate to the signup page
+  router.push('MobileSignup'); // Navigate to the signup page
 };
 
 const togglePasswordVisibility = () => {
