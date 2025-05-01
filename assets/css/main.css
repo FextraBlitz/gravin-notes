@@ -1,7 +1,13 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
 @layer base {
-    html {
+    /* html {
       overscroll-behavior: none;
+      color:black;
+    } */
+    body {
+      @apply text-black;
     }
 }
+

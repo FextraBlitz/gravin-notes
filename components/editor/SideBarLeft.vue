@@ -16,7 +16,7 @@ const isActive = ref(false)
         </div>
         <div id="Notebooks" :class="['overflow-y-auto h-full', isActive ? 'visible' : 'hidden']">
             <ul>
-                <li v-for="item in 50" class="bg-blue-200 my-[.25rem] py-[.5rem]">test item {{ item }}</li>
+                <li v-for="item in 50" class="my-[.1rem] py-[.5rem] rounded-md duration-50 hover:bg-blue-200 ">test item {{ item }}</li>
             </ul>
         </div>  
     </div>

@@ -4,8 +4,8 @@ const route = useRoute()
 </script>
 
 <template>
-  <div>
+  <UApp class="color-black">
     <NavBar v-if="!route.meta.hideNavbar" />
     <NuxtPage />
-  </div>
+  </UApp>
 </template>

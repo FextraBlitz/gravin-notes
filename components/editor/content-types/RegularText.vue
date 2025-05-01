@@ -1,7 +1,5 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
 
 
 

@@ -37,9 +37,4 @@
 </script>
 
 <style scoped>
-@layer base {
-  html {
-    background-color: black;
-  }
-}
 </style>
