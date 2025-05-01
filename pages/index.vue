@@ -7,6 +7,8 @@
   import MobileHomepage from './MobileHomepage.vue';
   import MobileSummarizer from './MobileSummarizer.vue';
   import MobileOptions from './MobileOptions.vue';
+  import MobileLogin from './MobileLogin.vue';
+  import { ref, onMounted, onUnmounted } from 'vue';
   </script>
 
 <style scoped>
