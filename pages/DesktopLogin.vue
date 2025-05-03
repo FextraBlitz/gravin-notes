@@ -1,4 +1,5 @@
 <template>
+    <div>
     <div class="mobile-login-page">
       <div class="login-card">
         <h1 class="login-title">Sign In</h1>
@@ -19,7 +20,7 @@
           </div>
           <a href="#" class="forgot-password-link">Forgot password?</a>
         </div>
-        <button class="login-button" @click="$emit('')">Log In</button>
+        <NuxtLink to="/" class="login-button">Log In</NuxtLink>
         <div class="remember-me">
           <input type="checkbox" id="rememberMe" v-model="rememberMe" />
           <label for="rememberMe">Remember me</label>
@@ -28,20 +29,21 @@
           <span class="divider-text">Or</span>
         </div>
         <button class="google-login-button">
-          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/google.svg" alt="Google" class="google-icon" />
           Sign in with Google
         </button>
         <div class="signup-prompt">
           Don't have an account?
-          <a href="#" class="signup-link" @click="$emit('')">Sign up here</a>
+          <NuxtLink to="/DesktopSignup" class="signup-link">Sign up here</NuxtLink>
         </div>
       </div>
+    </div>
     </div>
   </template>
   
   <script setup>
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import NavBar from '~/components/NavBar.vue';
   
   defineEmits(['navigateToHomepage']);
   
@@ -180,6 +182,9 @@
   
   .login-button 
   {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 15px;
     border-radius: 10px;
     border: none;
@@ -188,6 +193,7 @@
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    text-align: center;
   }
   
   .login-button:hover 

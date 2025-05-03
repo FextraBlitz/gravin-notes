@@ -22,4 +22,10 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
-})
+  hooks: {
+    'pages:extend'(pages) {
+      console.log(pages);
+    },
+  },
+});
+

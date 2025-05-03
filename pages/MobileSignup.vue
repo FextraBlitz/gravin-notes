@@ -41,7 +41,8 @@
   const password = ref('');
   const passwordVisible = ref(false);
   
-  const createAccount = () => {
+  const createAccount = () => 
+  {
     // Implement your account creation logic here
     console.log('Creating account with:', name.value, email.value, password.value);
     // For demonstration, we'll just navigate to a "home" page after a short delay
@@ -50,17 +51,20 @@
     }, 500);
   };
   
-  const goToLogin = () => {
+  const goToLogin = () => 
+  {
     router.push('MobileLogin'); // Replace '/login' with your actual login page route
   };
   
-  const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = () => 
+  {
     passwordVisible.value = !passwordVisible.value;
   };
   </script>
   
   <style scoped>
-  .mobile-signup-page {
+  .mobile-signup-page 
+  {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -70,7 +74,8 @@
     background-color: #f0f0f0;
   }
   
-  .signup-card {
+  .signup-card 
+  {
     width: 100%;
     max-width: 400px;
     padding: 20px;
@@ -82,49 +87,57 @@
     gap: 20px;
   }
   
-  .signup-title {
+  .signup-title 
+  {
     font-size: 2rem;
     font-weight: bold;
     color: #333;
     text-align: center;
   }
   
-  .signup-description {
+  .signup-description 
+  {
     font-size: 1rem;
     color: #555;
     text-align: center;
   }
   
-  .input-group {
+  .input-group 
+  {
     display: flex;
     flex-direction: column;
     gap: 5px;
   }
   
-  .input-group label {
+  .input-group label 
+  {
     font-size: 1rem;
     color: #333;
   }
   
-  .input-group input {
+  .input-group input 
+  {
     padding: 12px;
     border-radius: 10px;
     border: 1px solid #ccc;
     font-size: 1.2rem;
   }
   
-  .password-input-wrapper {
+  .password-input-wrapper 
+  {
     position: relative;
     display: flex;
     align-items: center;
   }
   
-  .password-input-wrapper input {
+  .password-input-wrapper input 
+  {
     flex: 1;
     padding-right: 40px;
   }
   
-  .password-toggle-button {
+  .password-toggle-button 
+  {
     position: absolute;
     right: 10px;
     top: 50%;
@@ -140,13 +153,15 @@
     height: 24px;
   }
   
-  .password-toggle-icon {
+  .password-toggle-icon 
+  {
     width: 24px;
     height: 24px;
     object-fit: contain;
   }
   
-  .create-account-button {
+  .create-account-button 
+  {
     padding: 15px;
     border-radius: 10px;
     border: none;
@@ -157,17 +172,20 @@
     transition: background-color 0.3s ease;
   }
   
-  .create-account-button:hover {
+  .create-account-button:hover 
+  {
     background-color: #0056b3;
   }
   
-  .login-prompt {
+  .login-prompt 
+  {
     font-size: 1rem;
     color: #555;
     text-align: center;
   }
   
-  .login-link {
+  .login-link 
+  {
     color: #007bff;
     cursor: pointer;
   }
