@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ - GRAVIN Notes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Ensure the footer stays at the bottom */
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    main {
+      flex: 1; /* Pushes the footer to the bottom when content is short */
+    }
+  </style>
+</head>
+<body class="bg-white font-sans">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center bg-gray-200 p-4">
+    <div class="flex items-center gap-4">
+      <a href="/">
+      <img src="/icons/image1.png" alt="Logo" class="w-10 h-10">
+      </a>
+      <nav class="flex gap-6 text-gray-800 font-medium">
+        <a href="#">AI Summarizer</a>
+        <a href="#">Notes</a>
+      </nav>
+    </div>
+    <div class="flex gap-4 text-sm">
+      <a href="DesktopContact.html">Contact</a>
+      <a href="#">Login/Sign Up</a>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex flex-col md:flex-row justify-between">
+      <!-- FAQ Content -->
+      <div class="md:w-2/3">
+        <h2 class="text-xl font-medium mb-6">Frequently Asked Questions (FAQ)</h2>
+
+        <div class="space-y-6 text-lg">
+          <div>
+            <p class="italic font-semibold">1. What does this site do?</p>
+            <p>It summarizes PDFs using AI.</p>
+          </div>
+          <div>
+            <p class="italic font-semibold">2. Is my file safe?</p>
+            <p>Yes, files are private and deleted after use if you have no account.</p>
+          </div>
+          <div>
+            <p class="italic font-semibold">3. Do I need an account?</p>
+            <p>No, but signing up gives more features.</p>
+          </div>
+          <div>
+            <p class="italic font-semibold">4. Can I download the summary?</p>
+            <p>Yes, as text or PDF.</p>
+          </div>
+          <div>
+            <p class="italic font-semibold">5. Are there limits?</p>
+            <p>Free accounts have size/page limits. Pro gets more.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Placeholder -->
+      <div class="image-placeholder">
+        <img src="/icons/faqicon.png" alt="FAQ Image"> <!-- Replaced placeholder -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-10 border-t pt-4 text-center text-sm text-gray-600">
+    <p class="space-x-4">
+      <a href="DesktopAboutUs.html">About Us</a> |
+      <a href="#">FAQ</a> |
+      <a href="#">Site Map</a>
+    </p>
+  </footer>
+
+</body>
+</html>
