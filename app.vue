@@ -288,7 +288,6 @@ onUnmounted(() =>
 {
   window.removeEventListener('resize', updateDeviceType);
 });
-const route = useRoute()
 </script>
 
 <template>

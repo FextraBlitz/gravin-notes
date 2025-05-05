@@ -102,34 +102,7 @@ onUnmounted(() => {
 });
 </script>
 
-<template>
-  <!-- Show MobileOptions if navigated and on mobile -->
-  <MobileOptions
-    v-if="isMobile && showMobileOptions"
-    @navigateToHomepage="navigateToMobileHomepage"
-    @navigateToSummarizer="navigateToMobileSummarizer"
-  />
-  <!-- Show MobileSummarizer if navigated and on mobile -->
-  <MobileSummarizer
-    v-if="isMobile && showMobileSummarizer"
-    @navigateToHomepage="navigateToMobileHomepage"
-    @navigateToLandingPage="navigateToLandingPage"
-    @navigateToOptions="navigateToMobileOptions"
-  />
-  <!-- Show MobileHomepage if navigated and on mobile -->
-  <MobileHomepage
-    v-else-if="isMobile && showMobileHomepage"
-    @navigateToLandingPage="navigateToLandingPage"
-    @navigateToSummarizer="navigateToMobileSummarizer"
-    @navigateToOptions="navigateToMobileOptions"
-  />
-  <!-- Show LandingPage if on mobile and no other mobile page is active -->
-  <MobileLandingPage
-    v-else-if="isMobile && !showMobileHomepage && !showMobileSummarizer && !showMobileOptions"
-    @navigateToHomepage="navigateToMobileHomepage"
-  />
-  <!-- Show NavBar and NuxtPage for desktop -->
-</template>
+
 
 <style scoped>
 /* Overall Page Container */
