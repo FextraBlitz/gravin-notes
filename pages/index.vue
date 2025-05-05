@@ -1,8 +1,9 @@
 <script setup>
-import MobileLandingPage from '../components/MobileLandingPage.vue';
-import MobileHomepage from '../pages/MobileHomepage.vue';
-import MobileSummarizer from '../pages/MobileSummarizer.vue';
-import MobileOptions from '../pages/MobileOptions.vue';
+import MobileLandingPage from '~/components/MobileLandingPage.vue';
+import MobileHomepage from './MobileHomepage.vue';
+import MobileSummarizer from './MobileSummarizer.vue';
+import MobileOptions from './MobileOptions.vue';
+import MobileLogin from './MobileLogin.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 
 // State to track if the user is on mobile
@@ -14,93 +15,76 @@ const showMobileSummarizer = ref(false);
 const showMobileOptions = ref(false);
 
 // Function to update the device type
-const updateDeviceType = () => 
-{
+const updateDeviceType = () => {
   isMobile.value = window.innerWidth <= 768; // Mobile if width is 768px or less
 };
 
 // Function to navigate to the mobile homepage
-const navigateToMobileHomepage = () => 
-{
+const navigateToMobileHomepage = () => {
   showMobileHomepage.value = true;
   showMobileSummarizer.value = false;
   showMobileOptions.value = false;
 };
 
 // Function to navigate to the mobile summarizer
-const navigateToMobileSummarizer = () => 
-{
+const navigateToMobileSummarizer = () => {
   showMobileHomepage.value = false;
   showMobileSummarizer.value = true;
   showMobileOptions.value = false;
 };
 
 // Function to navigate back to the mobile landing page
-const navigateToLandingPage = () => 
-{
+const navigateToLandingPage = () => {
   showMobileHomepage.value = false;
   showMobileSummarizer.value = false;
   showMobileOptions.value = false;
 };
 
-const navigateToMobileOptions = () => 
-{
+const navigateToMobileOptions = () => {
   showMobileHomepage.value = false;
   showMobileSummarizer.value = false;
   showMobileOptions.value = true; // Show MobileOptions
 };
 
 // Set up event listeners to detect screen size changes
-onMounted(() => 
-{
+onMounted(() => {
   updateDeviceType();
   window.addEventListener('resize', updateDeviceType);
 });
 
-onUnmounted(() => 
-{
+onUnmounted(() => {
   window.removeEventListener('resize', updateDeviceType);
 });
 </script>
 
 <template>
   <!-- Show MobileOptions if navigated and on mobile -->
-    <MobileOptions
-      v-if="isMobile && showMobileOptions"
-      @navigateToHomepage="navigateToMobileHomepage"
-      @navigateToSummarizer="navigateToMobileSummarizer"
-    />
-    <!-- Show MobileSummarizer if navigated and on mobile -->
-    <MobileSummarizer
-      v-if="isMobile && showMobileSummarizer"
-      @navigateToHomepage="navigateToMobileHomepage"
-      @navigateToLandingPage="navigateToLandingPage"
-      @navigateToOptions="navigateToMobileOptions"
-    />
-    <!-- Show MobileHomepage if navigated and on mobile -->
-    <MobileHomepage
-      v-else-if="isMobile && showMobileHomepage"
-      @navigateToLandingPage="navigateToLandingPage"
-      @navigateToSummarizer="navigateToMobileSummarizer"
-      @navigateToOptions="navigateToMobileOptions"
-    />
-    <!-- Show LandingPage if on mobile and no other mobile page is active -->
-    <LandingPage
-      v-else-if="isMobile && !showMobileHomepage && !showMobileSummarizer && !showMobileOptions"
-      @navigateToHomepage="navigateToMobileHomepage"
-    />
-    <!-- Show NavBar and NuxtPage for desktop -->
+  <MobileOptions
+    v-if="isMobile && showMobileOptions"
+    @navigateToHomepage="navigateToMobileHomepage"
+    @navigateToSummarizer="navigateToMobileSummarizer"
+  />
+  <!-- Show MobileSummarizer if navigated and on mobile -->
+  <MobileSummarizer
+    v-if="isMobile && showMobileSummarizer"
+    @navigateToHomepage="navigateToMobileHomepage"
+    @navigateToLandingPage="navigateToLandingPage"
+    @navigateToOptions="navigateToMobileOptions"
+  />
+  <!-- Show MobileHomepage if navigated and on mobile -->
+  <MobileHomepage
+    v-else-if="isMobile && showMobileHomepage"
+    @navigateToLandingPage="navigateToLandingPage"
+    @navigateToSummarizer="navigateToMobileSummarizer"
+    @navigateToOptions="navigateToMobileOptions"
+  />
+  <!-- Show LandingPage if on mobile and no other mobile page is active -->
+  <MobileLandingPage
+    v-else-if="isMobile && !showMobileHomepage && !showMobileSummarizer && !showMobileOptions"
+    @navigateToHomepage="navigateToMobileHomepage"
+  />
+  <!-- Show NavBar and NuxtPage for desktop -->
 </template>
-  
-  <script setup>
-  import MobileLandingPage from '~/components/MobileLandingPage.vue';
-  import MobileHomepage from './MobileHomepage.vue';
-  import MobileSummarizer from './MobileSummarizer.vue';
-  import MobileOptions from './MobileOptions.vue';
-  import MobileLogin from './MobileLogin.vue';
-  import { ref, onMounted, onUnmounted } from 'vue';
-  </script>
 
 <style scoped>
-
 </style>
