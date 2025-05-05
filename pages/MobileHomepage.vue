@@ -9,7 +9,7 @@
         </div>
         Use the AI Summarizer
       </button>
-      <button class="feature-button view-notes-button" @click="goToMyNotes">
+      <button class="feature-button view-notes-button" @click="$emit('navigateToLogin')">
         <div class="icon-container">
           <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Notes Icon" class="notes-icon" />
         </div>
@@ -25,7 +25,7 @@
         <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/cpu.svg" alt="AI" class="nav-icon" />
         AI
       </div>
-      <div class="nav-item" @click="goToNotes">
+      <div class="nav-item" @click="$emit('navigateToNotes')">
         <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Notes" class="nav-icon" />
         Notes
       </div>
@@ -42,24 +42,18 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const goToAISummarizer = () => 
+const goToHome = () => 
 {
-  router.push('/MobileSummarizer');
+  router.push('/MobileLandingPage'); // Adjust the route
 };
-
 const goToMyNotes = () => 
 {
-  router.push('/my-notes'); // Adjust the route
+  router.push('/MobileLogin'); // Adjust the route
 };
 
 const goToAI = () => 
 {
   router.push('/MobileSummarizer');
-};
-
-const goToNotes = () => 
-{
-  router.push('/notes');
 };
 
 const goToMore = () => 
