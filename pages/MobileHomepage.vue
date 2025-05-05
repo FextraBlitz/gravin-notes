@@ -48,7 +48,7 @@ const goToHome = () =>
 };
 const goToMyNotes = () => 
 {
-  router.push('/MobileLogin'); // Adjust the route
+  router.push('/MobileNotes'); // Adjust the route
 };
 
 const goToAI = () => 
