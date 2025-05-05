@@ -1,14 +1,11 @@
 <template>
-    <div class="mobile-signup-page">
-      <div class="signup-card">
-        <h1 class="signup-title">Create Account</h1>
-        <p class="signup-description">
-          Sign up to start using GRAVIN Notes.
+    <div>
+    <div class="mobile-login-page">
+      <div class="login-card">
+        <h1 class="login-title">Sign In</h1>
+        <p class="login-description">
+          Log in by entering your email address and password.
         </p>
-        <div class="input-group">
-          <label for="name">Name</label>
-          <input type="text" id="name" v-model="name" placeholder="Enter your name" />
-        </div>
         <div class="input-group">
           <label for="email">Email address</label>
           <input type="email" id="email" v-model="email" placeholder="Enter your email" />
@@ -21,49 +18,64 @@
               <img :src="passwordVisible ? 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/eye-off.svg' : 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/eye.svg'" :alt="passwordVisible ? 'Hide Password' : 'Show Password'" class="password-toggle-icon" />
             </button>
           </div>
+          <a href="#" class="forgot-password-link">Forgot password?</a>
         </div>
-        <button class="create-account-button" @click="$emit('navigateToLogin')">Create Account</button>
-        <div class="login-prompt">
-          Already have an account?
-          <a href="#" class="login-link" @click="$emit('navigateToLogin')">Log in here</a>
+        <NuxtLink to="/" class="login-button">Log In</NuxtLink>
+        <div class="remember-me">
+          <input type="checkbox" id="rememberMe" v-model="rememberMe" />
+          <label for="rememberMe">Remember me</label>
+        </div>
+        <div class="or-divider">
+          <span class="divider-text">Or</span>
+        </div>
+        <button class="google-login-button">
+          Sign in with Google
+        </button>
+        <div class="signup-prompt">
+          Don't have an account?
+          <NuxtLink to="/DesktopSignup" class="signup-link">Sign up here</NuxtLink>
         </div>
       </div>
+    </div>
     </div>
   </template>
   
   <script setup>
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import NavBar from '~/components/NavBar.vue';
+  
+  defineEmits(['navigateToHomepage']);
   
   const router = useRouter();
-  const name = ref('');
   const email = ref('');
   const password = ref('');
+  const rememberMe = ref(false);
   const passwordVisible = ref(false);
   
-  const createAccount = () => 
-  {
-    // Implement your account creation logic here
-    console.log('Creating account with:', name.value, email.value, password.value);
-    // For demonstration, we'll just navigate to a "home" page after a short delay
+  const login = () => {
+    console.log('Logging in with:', email.value, password.value, rememberMe.value);
     setTimeout(() => {
-      router.push('MobileHomepage'); // Replace '/' with your actual home page route
+      router.push('/'); // Navigate to the homepage after login
     }, 500);
   };
   
-  const goToLogin = () => 
-  {
-    router.push('MobileLogin'); // Replace '/login' with your actual login page route
+  const goToSignup = () => {
+    router.push('/signup'); // Navigate to the signup page
   };
   
-  const togglePasswordVisibility = () => 
-  {
+  const togglePasswordVisibility = () => {
     passwordVisible.value = !passwordVisible.value;
   };
+  
+  // Log when the component is mounted
+  onMounted(() => {
+    console.log('DesktopLogin component loaded');
+  });
   </script>
   
   <style scoped>
-  .mobile-signup-page 
+  .mobile-login-page 
   {
     display: flex;
     flex-direction: column;
@@ -74,7 +86,7 @@
     background-color: #f0f0f0;
   }
   
-  .signup-card 
+  .login-card 
   {
     width: 100%;
     max-width: 400px;
@@ -87,7 +99,7 @@
     gap: 20px;
   }
   
-  .signup-title 
+  .login-title 
   {
     font-size: 2rem;
     font-weight: bold;
@@ -95,7 +107,7 @@
     text-align: center;
   }
   
-  .signup-description 
+  .login-description 
   {
     font-size: 1rem;
     color: #555;
@@ -125,15 +137,15 @@
   
   .password-input-wrapper 
   {
-    position: relative;
+    position: relative; /* Make this a positioning context */
     display: flex;
     align-items: center;
   }
   
   .password-input-wrapper input 
   {
-    flex: 1;
-    padding-right: 40px;
+    flex: 1; /* Ensure the input takes up available space */
+    padding-right: 40px; /* Make space for the button */
   }
   
   .password-toggle-button 
@@ -146,10 +158,10 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    display: flex;
+    display: flex;  /* Use flexbox for centering */
     align-items: center;
     justify-content: center;
-    width: 24px;
+    width: 24px; /* Ensure a minimum size for the button */
     height: 24px;
   }
   
@@ -160,8 +172,19 @@
     object-fit: contain;
   }
   
-  .create-account-button 
+  
+  .forgot-password-link 
   {
+    font-size: 0.9rem;
+    color: #007bff;
+    text-align: right;
+  }
+  
+  .login-button 
+  {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 15px;
     border-radius: 10px;
     border: none;
@@ -170,23 +193,78 @@
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    text-align: center;
   }
   
-  .create-account-button:hover 
+  .login-button:hover 
   {
     background-color: #0056b3;
   }
   
-  .login-prompt 
+  .remember-me 
+  {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #aaa;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .divider-text 
+  {
+    padding: 0 10px;
+  }
+  
+  .or-divider::before,
+  .or-divider::after 
+  {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: #ccc;
+  }
+  
+  
+  .google-login-button 
+  {
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    font-size: 1.2rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .google-icon
+  {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+  
+  .signup-prompt 
   {
     font-size: 1rem;
     color: #555;
     text-align: center;
   }
   
-  .login-link 
+  .signup-link 
   {
-    color: #007bff;
+    color: #000000;
     cursor: pointer;
   }
   </style>

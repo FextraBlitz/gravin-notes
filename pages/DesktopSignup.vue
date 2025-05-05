@@ -22,10 +22,10 @@
             </button>
           </div>
         </div>
-        <button class="create-account-button" @click="$emit('navigateToLogin')">Create Account</button>
+        <NuxtLink to="/DesktopLogin" class="create-account-button">Create Account</NuxtLink>
         <div class="login-prompt">
           Already have an account?
-          <a href="#" class="login-link" @click="$emit('navigateToLogin')">Log in here</a>
+          <NuxtLink to="/DesktopLogin" class="login-link">Sign up here</NuxtLink>
         </div>
       </div>
     </div>
@@ -46,14 +46,6 @@
     // Implement your account creation logic here
     console.log('Creating account with:', name.value, email.value, password.value);
     // For demonstration, we'll just navigate to a "home" page after a short delay
-    setTimeout(() => {
-      router.push('MobileHomepage'); // Replace '/' with your actual home page route
-    }, 500);
-  };
-  
-  const goToLogin = () => 
-  {
-    router.push('MobileLogin'); // Replace '/login' with your actual login page route
   };
   
   const togglePasswordVisibility = () => 
@@ -162,6 +154,9 @@
   
   .create-account-button 
   {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 15px;
     border-radius: 10px;
     border: none;
@@ -170,6 +165,7 @@
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    text-align: center;
   }
   
   .create-account-button:hover 

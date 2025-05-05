@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NavBar from './components/NavBar.vue';
+import DesktopLogin from './pages/DesktopLogin.vue';
 import LandingPage from './components/MobileLandingPage.vue';
 import MobileHomepage from './pages/MobileHomepage.vue';
 import MobileSummarizer from './pages/MobileSummarizer.vue';
@@ -34,12 +35,26 @@ const showMobileAboutUs = ref(false);
 const showMobileDeletedNotes = ref(false);
 const showMobileAccount = ref(false);
 const showMobileDeleteAccount = ref(false);
+const showDesktopLogin = ref(false);
 
 // Function to update the device type
 function updateDeviceType() 
 {
   isMobile.value = window.innerWidth <= 768; // Mobile if width is 768px or less
 }
+
+const route = useRoute();
+watch(
+  () => route.path,
+  (newPath) => {
+    if (!isMobile.value && newPath === '/desktop-login') {
+      showDesktopLogin.value = true;
+    } else {
+      showDesktopLogin.value = false;
+    }
+  },
+);
+
 
 // Function to navigate to the mobile homepage
 const navigateToMobileHomepage = () => 
@@ -278,6 +293,10 @@ const route = useRoute()
 
 <template>
   <UApp class="color-black">
+    <!-- Render DesktopLogin.vue only in desktop mode -->
+    <div v-if="$route.path === '/desktop-login'">
+      <DesktopLogin />
+    </div>
     <!-- Show MobileLogin if navigated and on mobile -->
     <MobileLogin
       v-if="isMobile && showMobileLogin"

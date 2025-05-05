@@ -28,7 +28,6 @@
           <span class="divider-text">Or</span>
         </div>
         <button class="google-login-button">
-          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/google.svg" alt="Google" class="google-icon" />
           Sign in with Google
         </button>
         <div class="signup-prompt">
