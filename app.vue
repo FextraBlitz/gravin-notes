@@ -97,7 +97,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <UApp>
+  <UApp class="color-black">
     <!-- Show MobileLogin if navigated and on mobile -->
     <MobileLogin
       v-if="isMobile && showMobileLogin"
