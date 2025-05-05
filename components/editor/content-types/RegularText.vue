@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, expose} from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -10,56 +10,30 @@ const props = defineProps({
   render: Boolean
 })
 
-const emit = defineEmits(['select', 'update', 'delete'])
+const refInput = ref(null)
+defineExpose({ refInput })
 
+const emit = defineEmits(['select', 'update', 'delete', 'register-methods', 'expose-methods'])
 
-// --UNDO REDO LOGIC--
-
+// --OPTIMIZED UNDO REDO LOGIC--
 const internalText = ref(props.text || '')
-const undoStack = ref([])
-const redoStack = ref([])
 
-// Sync when props.text changes externally
+// Fixed text synchronization
 watch(() => props.text, (newVal) => {
-  internalText.value = newVal
-})
-
-// Save previous value before change
-watch(internalText, (newVal, oldVal) => {
-  if (props.selected) {
-    undoStack.value.push(oldVal)
-    redoStack.value = []
-    emit('update', newVal)
+  // Only update if different from current state and not undefined/null
+  if (newVal !== undefined && newVal !== internalText.value) {
+    internalText.value = newVal || ''
   }
-})
-
-const undo = () => {
-  if (!undoStack.value.length) return
-  redoStack.value.push(internalText.value)
-  internalText.value = undoStack.value.pop()
-  emit('update', internalText.value)
-}
-
-const redo = () => {
-  if (!redoStack.value.length) return
-  undoStack.value.push(internalText.value)
-  internalText.value = redoStack.value.pop()
-  emit('update', internalText.value)
-}
-
-// Allow parent to call undo/redo
-expose({ undo, redo })
+}, { immediate: true })
 
 // --SELECT LOGIC--
 const onClick = () => {
   emit('select', props.id) // notify parent with ID/key
 }
 
-
 // --RENDER LOGIC--
 const realtimeRender = ref(false)
 const render = ref(true)
-
 const renderedOutput = computed(() => {
   const dirty = render.value ? marked(internalText.value || '') : internalText.value
   return DOMPurify.sanitize(dirty)
@@ -69,17 +43,17 @@ const renderedOutput = computed(() => {
 <template>
     <div
         @click="onClick"
-        
         :class="[
           'bg-cyan-200 w-full max-w-full px-2 py-1 my-1 whitespace-pre-wrap break-words overflow-y-auto text-balance',
             props.selected ? 'cursor-default' : 'cursor-pointer'
           ]"
     >
-      <div 
-        v-if="props.text && props.text.trim() !== ''"
+      <div
+        v-if="internalText && internalText.trim() !== ''"
         v-html="renderedOutput"
+        class="markdown-body prose whitespace-normal text-black text-balance"
         />
-      
+     
       <div v-else class="italic text-gray-500">
         Start writing...
       </div>
@@ -87,4 +61,7 @@ const renderedOutput = computed(() => {
 </template>
 
 <style scoped>
+/* .markdown-body {
+  all: revert;
+} */
 </style>
