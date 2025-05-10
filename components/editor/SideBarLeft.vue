@@ -112,29 +112,28 @@ const formatPageTitle = (page) => {
 }
 </script>
 
-
 <template>
   <div ref="sidebarRef"
     @mousemove="checkCursor"
     @mouseleave="resetCursor"
     @mousedown="checkStartResize"
     :style="{ width: setWidth + 'px', cursor: cursorStyle }"
-    class="bg-amber-100 h-[calc(100vh-2rem)] sticky top-[2rem] shrink-0" >
+    class="bg-[#e8e8e0] h-[calc(100vh-2rem)] sticky top-[2rem] shrink-0" >
     <div class="relative flex flex-col h-full">
       <!-- Sidebar Header -->
-      <div class="w-full h-[3rem] flex bg-amber-200 border-b border-amber-300">
-        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-amber-300 transition-colors'>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <div class="w-full h-[3rem] flex bg-[#d8d8d0] border-b border-[#c8c8c0]">
+        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors'>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#282a36]" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
           </svg>
         </div>
-        <div class="h-full flex-1 inline-flex items-center px-3 font-medium">
+        <div class="h-full flex-1 inline-flex items-center px-3 font-medium text-[#282a36]">
           <div>Pages</div>
         </div>
       </div>
 
       <!-- Pages List -->
-      <div id="Notebooks" :class="`overflow-y-auto max-h-[calc(100vh-3rem-2rem) bg-amber-50 ${isActive ? 'block' : 'hidden'}`">
+      <div id="Notebooks" :class="`overflow-y-auto max-h-[calc(100vh-3rem-2rem)] bg-[#f0f0ea] ${isActive ? 'block' : 'hidden'}`">
         <ul class="p-2">
           <!-- Page items -->
           <li 
@@ -144,13 +143,13 @@ const formatPageTitle = (page) => {
             :class="[
               'flex justify-between items-center px-3 py-2 rounded-md', 
               'cursor-pointer mb-1 group',
-              activePage.value === page.id ? 'bg-blue-100 text-blue-800' : 'hover:bg-amber-200'
+              activePage.value === page.id ? 'bg-[#d7d4f0] text-[#282a36]' : 'hover:bg-[#e0e0da] text-[#282a36]'
             ]"
           >
             <span class="truncate">{{ formatPageTitle(page) }}</span>
             <button 
               @click="(e) => confirmDeletePage(e, page.id)" 
-              class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-[#6272a4] hover:text-[#ff5555] opacity-0 group-hover:opacity-100 transition-opacity"
               title="Delete page"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -162,7 +161,7 @@ const formatPageTitle = (page) => {
           <!-- Add Page Button -->
           <li 
             @click="addPage" 
-            class="flex items-center px-3 py-2 rounded-md bg-amber-50 hover:bg-amber-200 cursor-pointer border border-dashed border-amber-300 mt-2"
+            class="flex items-center px-3 py-2 rounded-md bg-[#f0f0ea] hover:bg-[#8be9fd] cursor-pointer border border-dashed border-[#bd93f9] mt-2 text-[#282a36]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
@@ -206,11 +205,11 @@ const formatPageTitle = (page) => {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #bd93f9;
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #8be9fd;
 }
 </style>

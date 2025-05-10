@@ -14,6 +14,9 @@ const cursorStyle = ref('default')
 let isResizing = false
 const RESIZE_MARGIN = 10
 
+// Define the theme color as a variable for consistency
+const themeColor = '#bd93f9' // Soft purple accent color
+
 const props = defineProps({
   modelValue: String,
   id: [Number, String],
@@ -162,75 +165,76 @@ function wrapSelection(before, after = before, multiline = false) {
     @mouseleave="resetCursor"
     @mousedown="checkStartResize"
     :style="{ width: setWidth + 'px', cursor: cursorStyle }"
-    class="bg-amber-100 h-[calc(100vh-2rem)] sticky top-[2rem] right-0"
+    class="bg-[#e8e8e0] h-[calc(100vh-2rem)] sticky top-[2rem] right-0"
   >
     <div class="relative flex flex-col h-full">
       <!-- Header -->
-      <div class="w-full h-[3rem] flex bg-amber-200 border-b border-amber-300">
-        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-amber-300 transition-colors'>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <div class="w-full h-[3rem] flex bg-[#d8d8d0] border-b border-[#c8c8c0]">
+        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors'>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#282a36]" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
           </svg>
         </div>
-        <div class="h-full flex-1 inline-flex items-center px-3 font-medium">
+        <div class="h-full flex-1 inline-flex items-center px-3 font-medium text-[#282a36]">
           <div>Markdown Editor</div>
         </div>
         <div 
-          class="h-full aspect-square flex items-center justify-center hover:bg-red-400 transition-colors text-red-700"
+          class="h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors text-[#282a36]"
           @click.stop="$emit('delete', id)"
         >
+          <!-- Trash can icon instead of X -->
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
           </svg>
         </div>
       </div>
 
       <!-- Toolbar -->
-      <div class="flex flex-col w-full bg-amber-200 border-b border-amber-300">
+      <div class="flex flex-col w-full bg-[#d8d8d0] border-b border-[#c8c8c0]">
         <!-- Row 1: Bold, Italic, Strikethrough, Code -->
         <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleBold">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleBold">
             <b>B</b>
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleItalic">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleItalic">
             <i>I</i>
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleStrikethrough">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleStrikethrough">
             <span class="line-through">S</span>
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleCodeBlock">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleCodeBlock">
             <code>Code</code>
           </div>
         </div>
         
         <!-- Row 2: H1, H2, Bullet List, Numbered List -->
         <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleH1">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleH1">
             H1
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleH2">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleH2">
             H2
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleBulletList">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleBulletList">
             • List
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleNumberedList">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleNumberedList">
             1. List
           </div>
         </div>
         
         <!-- Row 3: Quote, Link, Image, HR -->
         <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleQuote">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleQuote">
             ❝ Quote
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleLink">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleLink">
             🔗 Link
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleImage">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleImage">
             🖼️ Img
           </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-amber-300 hover:bg-amber-400 cursor-pointer transition-colors" @click.stop="handleHr">
+          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleHr">
             ― HR
           </div>
         </div>
@@ -239,7 +243,7 @@ function wrapSelection(before, after = before, multiline = false) {
       <!-- Text Editor -->
       <textarea
         ref="refInput"
-        class="flex-grow bg-amber-50 w-full p-3 box-border resize-none focus:outline-none"
+        class="flex-grow bg-[#f0f0ea] w-full p-3 box-border resize-none focus:outline-none focus:border-[#bd93f9] focus:border-2 text-[#282a36] editor-area"
         v-model="localValue"
         @input="handleInput"
         :disabled="!isActive || id === null || id === undefined"
@@ -270,7 +274,7 @@ function wrapSelection(before, after = before, multiline = false) {
   transition: opacity 0.2s ease;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - using the theme color */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -280,11 +284,28 @@ function wrapSelection(before, after = before, multiline = false) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #bd93f9; /* Theme color */
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #a775f0; /* Slightly darker shade on hover */
+}
+
+/* Text selection color */
+.editor-area::selection {
+  background-color: rgba(189, 147, 249, 0.3); /* Semi-transparent purple */
+  color: #282a36;
+}
+
+.editor-area::-moz-selection {
+  background-color: rgba(189, 147, 249, 0.3); /* Semi-transparent purple */
+  color: #282a36;
+}
+
+/* Make sure the textarea has a focus style that matches our theme */
+.editor-area:focus {
+  border-color: #bd93f9;
+  box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.2);
 }
 </style>

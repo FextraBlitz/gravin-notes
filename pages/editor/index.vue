@@ -77,11 +77,9 @@ const blockMethods = ref({});
 
 // Get next available ID for a new block
 const getNextBlockId = () => {
-  // Collect all block IDs across all pages
   const allBlockIds = notebook.value.pages.flatMap(page => 
     page.blocks.map(block => block.id)
   );
-  
   return allBlockIds.length > 0 ? Math.max(...allBlockIds) + 1 : 1;
 };
 
@@ -103,14 +101,11 @@ const registerMethods = (id, methods) => {
 // Add a new block to the current page
 const addBlock = () => {
   const newId = getNextBlockId();
-  
   if (currentPage.value) {
     currentPage.value.blocks.push({
       id: newId,
       text: ''
     });
-    
-    // Set this new block as active
     nextTick(() => {
       activeBlock.value = newId;
     });
@@ -120,14 +115,11 @@ const addBlock = () => {
 // Add a new page to the notebook
 const addPage = () => {
   const newPageId = getNextPageId();
-  
   notebook.value.pages.push({
     id: newPageId,
     title: `New Page`,
     blocks: []
   });
-  
-  // Activate the new page
   activePage.value = newPageId;
 };
 
@@ -135,12 +127,9 @@ const addPage = () => {
 const sidebarRef = ref(null);
 const setActiveBlock = (id) => {
   activeBlock.value = id;
-  
-  // Update the current text when selecting a block
   const block = findBlockById(id);
   if (block) {
     currentTextboxText.value = block.text || '';
-  
     nextTick(() => {
       if (sidebarRef.value?.refInput) {
         sidebarRef.value.refInput.focus();
@@ -158,62 +147,43 @@ const setActivePage = (pageId) => {
 
 // Delete a block
 const deleteBlock = (idToDelete) => {
-  // Find which page contains this block
   for (const page of notebook.value.pages) {
     const blockIndex = page.blocks.findIndex(b => b.id === idToDelete);
-    
     if (blockIndex !== -1) {
-      // Remove the block from this page
       page.blocks.splice(blockIndex, 1);
-      
-      // Cleanup references and methods
       delete blockRefs.value[idToDelete];
       delete blockMethods.value[idToDelete];
-      
-      // If the active block was deleted, reset active state
       if (activeBlock.value === idToDelete) {
         activeBlock.value = null;
         currentTextboxText.value = '';
       }
-      
-      return; // Exit once we've found and deleted the block
+      return;
     }
   }
-  
   console.warn(`Block with ID ${idToDelete} not found`);
 };
 
 // Delete a page
 const deletePage = (pageId) => {
   const pageIndex = notebook.value.pages.findIndex(p => p.id === pageId);
-  
   if (pageIndex !== -1) {
-    // Don't delete the last page
     if (notebook.value.pages.length <= 1) {
       alert("Cannot delete the last page.");
       return;
     }
-    
-    // If deleting the active page, switch to another page
     if (activePage.value === pageId) {
       const newActivePage = notebook.value.pages[pageIndex - 1]?.id || 
                             notebook.value.pages[pageIndex + 1]?.id;
-      
       if (newActivePage) {
         activePage.value = newActivePage;
       }
-      
       activeBlock.value = null;
       currentTextboxText.value = '';
     }
-    
-    // Remove all block references for blocks in this page
     notebook.value.pages[pageIndex].blocks.forEach(block => {
       delete blockRefs.value[block.id];
       delete blockMethods.value[block.id];
     });
-    
-    // Remove the page
     notebook.value.pages.splice(pageIndex, 1);
   } else {
     console.warn(`Page with ID ${pageId} not found`);
@@ -226,7 +196,7 @@ const updateText = (newText) => {
     const block = findBlockById(activeBlock.value);
     if (block) {
       block.text = newText;
-      currentTextboxText.value = newText; // Keep current text in sync
+      currentTextboxText.value = newText;
     }
   }
 };
@@ -246,24 +216,15 @@ const updateNotebookTitle = (newTitle) => {
 
 // Save the notebook as a JSON file with .gnb extension
 const saveNotebook = () => {
-  // Update timestamp
   notebook.value.lastSaved = new Date().toISOString();
-  
-  // Create a clean copy of the notebook data
   const notebookData = JSON.stringify(notebook.value, null, 2);
-  
-  // Create blob and download link
   const blob = new Blob([notebookData], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
-  // Create and trigger download
   const a = document.createElement('a');
   a.href = url;
   a.download = `${notebook.value.title.replace(/\s+/g, '_')}.gnb`;
   document.body.appendChild(a);
   a.click();
-  
-  // Cleanup
   URL.revokeObjectURL(url);
   document.body.removeChild(a);
 };
@@ -271,21 +232,15 @@ const saveNotebook = () => {
 // Load notebook data from a file
 const loadNotebook = (notebookData) => {
   try {
-    // Reset all current state
     activeBlock.value = null;
     currentTextboxText.value = '';
     blockRefs.value = {};
     blockMethods.value = {};
-    
-    // Update notebook data
     notebook.value = {
-      ...notebook.value, // Keep the structure
-      ...notebookData,   // Override with loaded data
+      ...notebook.value,
+      ...notebookData,
     };
-    
-    // Set active page to the first page
     activePage.value = notebook.value.pages[0]?.id ?? null;
-    
     console.log('Notebook loaded successfully');
   } catch (error) {
     console.error('Error loading notebook:', error);
@@ -298,13 +253,11 @@ onMounted(async () => {
   try {
     const res = await fetch('/api/user/notebook');
     const notebookData = await res.json();
-
     if (notebookData && Array.isArray(notebookData.pages)) {
       notebook.value = {
-        ...notebook.value, // preserve structure
-        ...notebookData    // override with fetched data
+        ...notebook.value,
+        ...notebookData
       };
-
       activePage.value = notebook.value.pages[0]?.id ?? null;
     } else {
       console.warn("Invalid notebook data. Using default.");
@@ -312,8 +265,6 @@ onMounted(async () => {
   } catch (e) {
     console.warn('API fetch failed, using default notebook data.');
   }
-  
-  // Add event listener for notebook save
   document.addEventListener('save-notebook', () => {
     saveNotebook();
   });
@@ -328,32 +279,33 @@ provide('deletePage', deletePage);
 </script>
 
 <template>
-  <div class="min-h-screen bg-amber-50 flex flex-col">
-    <!-- Header -->
+  <div class="flex flex-col min-h-screen bg-[#f0f0ea]">
+    <!-- Header (Fixed) -->
     <EditorNavBar 
       :title="notebook.title" 
       @update-title="updateNotebookTitle"
       @save-notebook="saveNotebook"
       @load-notebook="loadNotebook"
+      class="fixed top-0 left-0 right-0 z-50"
     />
     
     <!-- Main Content Area -->
-    <div class="flex flex-1 overflow-hidden">
-      <!-- Left Sidebar -->
-      <SideBarLeft />
+    <div class="flex flex-1 pt-[4rem]">
+      <!-- Left Sidebar (Sticky) -->
+      <SideBarLeft class="w-[250px] h-[calc(100vh-4rem)] sticky top-[4rem]" />
       
-      <!-- Main Content -->
-      <div class="flex-1 overflow-y-auto p-4 bg-white shadow-sm">
-        <div v-if="currentPage" class="mb-4 border-b pb-2">
+      <!-- Main Content (Scrollable) -->
+      <div class="flex-1 overflow-y-auto h-[calc(100vh-4rem)] p-4 bg-[#ffffff] shadow-sm">
+        <div v-if="currentPage" class="mb-4 border-b pb-2 border-[#c8c8c0]">
           <div class="flex items-center justify-between group">
-            <h2 class="text-xl font-medium text-gray-800 group-hover:hidden">
+            <h2 class="text-xl font-medium text-[#282a36] group-hover:hidden">
               {{ currentPage.title || 'Untitled Page' }}
             </h2>
             <input 
               type="text" 
               v-model="currentPage.title" 
               @change="updatePageTitle(currentPage.id, currentPage.title)"
-              class="border border-gray-300 rounded px-2 py-1 text-xl font-medium text-gray-800 hidden group-hover:block w-full"
+              class="border border-[#c8c8c0] rounded px-2 py-1 text-xl font-medium text-[#282a36] hidden group-hover:block w-full bg-[#f0f0ea] focus:outline-none focus:border-[#bd93f9]"
               placeholder="Page title"
             />
           </div>
@@ -367,6 +319,7 @@ provide('deletePage', deletePage);
             :id="block.id"
             :text="block.text"
             :selected="block.id === activeBlock"
+            :render="true"
             @select="setActiveBlock"
             @update="updateText"
             @register-methods="registerMethods"
@@ -376,7 +329,7 @@ provide('deletePage', deletePage);
         <!-- Add Block Button -->
         <div
           @click="addBlock"
-          class="mt-4 flex items-center justify-center h-12 bg-gray-100 hover:bg-gray-200 transition-colors rounded-md cursor-pointer"
+          class="mt-4 flex items-center justify-center h-12 bg-[#d8d8d0] hover:bg-[#bd93f9] transition-colors rounded-md cursor-pointer text-[#282a36]"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
@@ -385,21 +338,39 @@ provide('deletePage', deletePage);
         </div>
       </div>
       
-      <!-- Right Sidebar -->
+      <!-- Right Sidebar (Sticky) -->
       <SideBarRight
         ref="sidebarRef"
         v-model="currentTextboxText"
         :id="activeBlock"
         @delete="deleteBlock"
         @update:modelValue="updateText"
+        class="w-[300px] h-[calc(100vh-4rem)] sticky top-[4rem]"
       />
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Add transitions and other styling */
 .transition-colors {
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom scrollbar for the main content area */
+.main-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: #bd93f9;
+  border-radius: 2px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: #8be9fd;
 }
 </style>
