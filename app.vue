@@ -28,12 +28,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <UApp class="color-black">
-    <div>
+    <UApp class="color-black">
       <NavBar v-if="!route.meta.hideDefaultNavbar" />
       <NuxtPage />
-    </div>
-  </UApp>
+    </UApp>
 </template>
 
 <style scoped>

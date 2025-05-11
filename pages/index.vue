@@ -175,11 +175,11 @@ const navigateToEditor = () => {
 }
 
 import MobileLandingPage from '~/components/MobileLandingPage.vue';
-import MobileHomepage from './MobileHomepage.vue';
-import MobileSummarizer from './MobileSummarizer.vue';
-import MobileOptions from './MobileOptions.vue';
-import MobileLogin from './MobileLogin.vue';
-import MobileSignup from './MobileSignup.vue';
+import MobileHomepage from './legacyMobile/MobileHomepage.vue';
+import MobileSummarizer from './legacyMobile/MobileSummarizer.vue';
+import MobileOptions from './legacyMobile/MobileOptions.vue';
+import MobileLogin from './legacyMobile/MobileLogin.vue';
+import MobileSignup from './legacyMobile/MobileSignup.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 
 // State to track if the user is on mobile

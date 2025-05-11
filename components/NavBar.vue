@@ -4,7 +4,7 @@
     <div class="flex items-center gap-6">
       <!-- Logo -->
       <NuxtLink to="/" class="flex items-center logo">
-        <img src="/assets/icons/image1.png" alt="Gravin Notes Logo" class="w-8 h-8">
+        <img src="/assets/icons/logo.png" alt="Gravin Notes Logo" class="w-8 h-8">
         <span class="ml-2 font-semibold text-gray-800 text-lg tracking-tight ">Gravin Notes</span>
       </NuxtLink>
       <!-- Navigation Links -->
