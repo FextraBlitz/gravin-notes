@@ -36,7 +36,7 @@ const renderedOutput = computed(() => {
     <div
         @click="onClick"
         :class="[
-          'notebook-paper w-full max-w-full px-6 py-3 my-4 whitespace-pre-wrap break-words overflow-y-auto text-balance',
+          'notebook-paper w-full max-w-full px-6 py-3 my-1 whitespace-pre-wrap break-words overflow-y-auto text-balance',
           props.selected ? 'notebook-selected' : 'hover:shadow-md transition-shadow cursor-pointer'
         ]"
     >

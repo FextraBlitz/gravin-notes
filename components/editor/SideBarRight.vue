@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue'
 
@@ -5,17 +6,14 @@ const refInput = ref(null)
 defineExpose({ refInput })
 
 const isActive = ref(true)
-const localValue = ref('') // Local value to track changes
+const localValue = ref('')
+const isKeyboardVisible = ref(false)
 
-// Resize functionality
 const setWidth = ref(300)
 const sidebarRef = ref(null)
 const cursorStyle = ref('default')
 let isResizing = false
 const RESIZE_MARGIN = 10
-
-// Define the theme color as a variable for consistency
-const themeColor = '#bd93f9' // Soft purple accent color
 
 const props = defineProps({
   modelValue: String,
@@ -30,21 +28,25 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'delete', 'undo', 'redo'])
+const emit = defineEmits(['update:modelValue', 'delete', 'undo', 'redo', 'close'])
 
-// Watch for changes in modelValue from parent
+const isMobile = inject('isMobile')
+
 watch(() => props.modelValue, (newVal) => {
   if (newVal !== undefined && newVal !== localValue.value) {
     localValue.value = newVal || ''
   }
 }, { immediate: true })
 
-// Watch for changes in the ID and update local value when id changes
 watch(() => props.id, () => {
   localValue.value = props.modelValue || ''
+  if (isMobile && refInput.value) {
+    nextTick(() => {
+      refInput.value.focus()
+    })
+  }
 }, { immediate: true })
 
-// Handle input changes and immediately propagate to parent
 const handleInput = (event) => {
   if (props.id !== null && props.id !== undefined) {
     const newValue = event.target.value
@@ -52,27 +54,25 @@ const handleInput = (event) => {
   }
 }
 
-// Resize handling functions
 const checkStartResize = (e) => {
-  if (!sidebarRef.value) return
+  if (isMobile || !sidebarRef.value) return
   const rect = sidebarRef.value.getBoundingClientRect()
-  const offsetX = e.clientX - rect.left
+  const offsetX = rect.right - e.clientX
   if (offsetX <= RESIZE_MARGIN) {
     e.preventDefault()
     isResizing = true
     document.body.classList.add('no-select')
     document.addEventListener('mousemove', resize)
     document.addEventListener('mouseup', stop)
+    console.log('Right resize started', { offsetX, rectRight: rect.right })
   }
 }
 
 const checkCursor = (e) => {
-  if (!sidebarRef.value) return
+  if (isMobile || !sidebarRef.value) return
   const rect = sidebarRef.value.getBoundingClientRect()
-  const offsetX = e.clientX - rect.left
-  cursorStyle.value = (offsetX <= RESIZE_MARGIN)
-    ? 'ew-resize'
-    : 'default'
+  const offsetX = rect.right - e.clientX
+  cursorStyle.value = (offsetX <= RESIZE_MARGIN) ? 'ew-resize' : 'default'
 }
 
 const resetCursor = () => {
@@ -81,10 +81,10 @@ const resetCursor = () => {
 
 const resize = (e) => {
   if (isResizing) {
-    // Calculate from the right side of the screen
     const windowWidth = window.innerWidth
     const newWidth = Math.min(500, Math.max(200, windowWidth - e.clientX))
     setWidth.value = newWidth
+    console.log('Right resizing', { newWidth, clientX: e.clientX })
   }
 }
 
@@ -93,6 +93,7 @@ const stop = () => {
   document.body.classList.remove('no-select')
   document.removeEventListener('mousemove', resize)
   document.removeEventListener('mouseup', stop)
+  console.log('Right resize stopped')
 }
 
 const handleBold = () => wrapSelection('**')
@@ -118,7 +119,6 @@ function wrapSelection(before, after = before, multiline = false) {
   const fullText = localValue.value
   const selected = fullText.slice(start, end)
 
-  // Toggle logic: remove if already wrapped
   const hasWrapper = selected.startsWith(before) && selected.endsWith(after)
   let newText, cursorStart, cursorEnd
 
@@ -156,125 +156,347 @@ function wrapSelection(before, after = before, multiline = false) {
     el.selectionEnd = cursorEnd
   })
 }
+
+onMounted(() => {
+  const checkKeyboard = () => {
+    isKeyboardVisible.value = window.innerHeight < window.visualViewport.height + 100
+  }
+  window.visualViewport?.addEventListener('resize', checkKeyboard)
+  return () => window.visualViewport?.removeEventListener('resize', checkKeyboard)
+})
 </script>
 
 <template>
-  <div 
+  <div
     ref="sidebarRef"
+    :class="{ 'sidebar-container': true, 'mobile-sidebar': isMobile }"
+    :style="!isMobile ? { width: setWidth + 'px', cursor: cursorStyle } : {}"
     @mousemove="checkCursor"
     @mouseleave="resetCursor"
     @mousedown="checkStartResize"
-    :style="{ width: setWidth + 'px', cursor: cursorStyle }"
-    class="bg-[#e8e8e0] h-[calc(100vh-2rem)] sticky top-[2rem] right-0"
+    role="complementary"
+    aria-label="Markdown editor"
   >
-    <div class="relative flex flex-col h-full">
+    <div class="sidebar-content">
       <!-- Header -->
-      <div class="w-full h-[3rem] flex bg-[#d8d8d0] border-b border-[#c8c8c0]">
-        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors'>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#282a36]" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="h-full flex-1 inline-flex items-center px-3 font-medium text-[#282a36]">
-          <div>Markdown Editor</div>
-        </div>
-        <div 
-          class="h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors text-[#282a36]"
-          @click.stop="$emit('delete', id)"
+      <div class="header">
+        <button
+          v-if="isMobile"
+          @click="$emit('close')"
+          class="close-button"
+          aria-label="Close editor"
         >
-          <!-- Trash can icon instead of X -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close icon" class="icon">
+        </button>
+        <button
+          v-else
+          @click="isActive = !isActive"
+          class="toggle-button"
+          :aria-label="isActive ? 'Collapse editor' : 'Expand editor'"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/menu.svg" alt="Menu icon" class="icon">
+        </button>
+        <div v-if="!isMobile && isActive" class="header-title">
+          Markdown Editor
         </div>
+        <button
+          @click="$emit('delete', id)"
+          class="delete-button"
+          aria-label="Delete block"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trash-2.svg" alt="Delete icon" class="icon">
+        </button>
       </div>
-
       <!-- Toolbar -->
-      <div class="flex flex-col w-full bg-[#d8d8d0] border-b border-[#c8c8c0]">
-        <!-- Row 1: Bold, Italic, Strikethrough, Code -->
-        <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleBold">
-            <b>B</b>
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleItalic">
-            <i>I</i>
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleStrikethrough">
-            <span class="line-through">S</span>
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleCodeBlock">
-            <code>Code</code>
-          </div>
+      <div v-if="isActive || isMobile" class="toolbar" :style="isMobile && isKeyboardVisible ? { bottom: '0px' } : {}">
+        <!-- Desktop: Four-Item Grid -->
+        <div v-if="!isMobile" class="toolbar-grid">
+          <button @click="handleBold" class="toolbar-button" aria-label="Bold text"><b>B</b></button>
+          <button @click="handleItalic" class="toolbar-button" aria-label="Italic text"><i>I</i></button>
+          <button @click="handleStrikethrough" class="toolbar-button" aria-label="Strikethrough text"><span class="line-through">S</span></button>
+          <button @click="handleCodeBlock" class="toolbar-button" aria-label="Code block"><code>Code</code></button>
+          <button @click="handleH1" class="toolbar-button" aria-label="Heading 1">H1</button>
+          <button @click="handleH2" class="toolbar-button" aria-label="Heading 2">H2</button>
+          <button @click="handleBulletList" class="toolbar-button" aria-label="Bullet list">• List</button>
+          <button @click="handleNumberedList" class="toolbar-button" aria-label="Numbered list">1. List</button>
+          <button @click="handleQuote" class="toolbar-button" aria-label="Block quote">❝ Quote</button>
+          <button @click="handleLink" class="toolbar-button" aria-label="Insert link">🔗 Link</button>
+          <button @click="handleImage" class="toolbar-button" aria-label="Insert image">🖼️ Img</button>
+          <button @click="handleHr" class="toolbar-button" aria-label="Horizontal rule">― HR</button>
         </div>
-        
-        <!-- Row 2: H1, H2, Bullet List, Numbered List -->
-        <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleH1">
-            H1
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleH2">
-            H2
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleBulletList">
-            • List
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleNumberedList">
-            1. List
-          </div>
-        </div>
-        
-        <!-- Row 3: Quote, Link, Image, HR -->
-        <div class="flex w-full">
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleQuote">
-            ❝ Quote
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleLink">
-            🔗 Link
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleImage">
-            🖼️ Img
-          </div>
-          <div class="flex items-center justify-center p-1 h-10 flex-1 bg-[#e0e0da] hover:bg-[#bd93f9] cursor-pointer transition-colors text-[#282a36]" @click.stop="handleHr">
-            ― HR
-          </div>
+        <!-- Mobile: Scrollable Row -->
+        <div v-else class="toolbar-row">
+          <button @click="handleBold" class="toolbar-button" aria-label="Bold text"><b>B</b></button>
+          <button @click="handleItalic" class="toolbar-button" aria-label="Italic text"><i>I</i></button>
+          <button @click="handleStrikethrough" class="toolbar-button" aria-label="Strikethrough text"><span class="line-through">S</span></button>
+          <button @click="handleCodeBlock" class="toolbar-button" aria-label="Code block"><code>Code</code></button>
+          <button @click="handleH1" class="toolbar-button" aria-label="Heading 1">H1</button>
+          <button @click="handleH2" class="toolbar-button" aria-label="Heading 2">H2</button>
+          <button @click="handleBulletList" class="toolbar-button" aria-label="Bullet list">• List</button>
+          <button @click="handleNumberedList" class="toolbar-button" aria-label="Numbered list">1. List</button>
+          <button @click="handleQuote" class="toolbar-button" aria-label="Block quote">❝ Quote</button>
+          <button @click="handleLink" class="toolbar-button" aria-label="Insert link">🔗 Link</button>
+          <button @click="handleImage" class="toolbar-button" aria-label="Insert image">🖼️ Img</button>
+          <button @click="handleHr" class="toolbar-button" aria-label="Horizontal rule">― HR</button>
         </div>
       </div>
-
       <!-- Text Editor -->
       <textarea
+        v-if="isActive || isMobile"
         ref="refInput"
-        class="flex-grow bg-[#f0f0ea] w-full p-3 box-border resize-none focus:outline-none focus:border-[#bd93f9] focus:border-2 text-[#282a36] editor-area"
+        class="editor"
         v-model="localValue"
         @input="handleInput"
         :disabled="!isActive || id === null || id === undefined"
-        :placeholder="id !== null && id !== undefined ? 'Type your markdown here...' : 'Select a box to edit'"
+        :placeholder="id !== null && id !== undefined ? 'Type your markdown here...' : 'Select a block to edit'"
+        aria-label="Markdown text editor"
       ></textarea>
-
-      <!-- Resize Handle -->
+      <!-- Resize Handle (Desktop Only) -->
       <div
-        class="absolute top-0 left-0 h-full cursor-ew-resize z-50"
-        :style="{ width: RESIZE_MARGIN + 'px' }"
+        v-if="!isMobile"
+        class="resize-handle"
         @mousedown="checkStartResize"
+        aria-hidden="true"
       ></div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Sidebar Container */
+.sidebar-container {
+  background-color: #f9f9f9;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Disable transition during resize */
+.sidebar-container:not(.is-resizing) {
+  transition: width 0.2s ease;
+}
+
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  padding: 0; /* Ensure no padding */
+}
+
+/* Desktop Styling */
+@media (min-width: 769px) {
+  .sidebar-container {
+    height: calc(100vh - 4rem);
+    position: sticky;
+    top: 4rem;
+    z-index: 60;
+  }
+}
+
+/* Resize Handle */
+.resize-handle {
+  width: 4px;
+  background-color: #f3e8ff;
+  opacity: 0.3;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  z-index: 10;
+}
+
+.resize-handle:hover {
+  opacity: 0.5;
+}
+
+/* Sidebar Content */
+.sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* Remove padding for full width */
+}
+
+/* Header */
+.header {
+  width: 100%;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+/* Close Button (Mobile) */
+.close-button {
+  height: 100%;
+  width: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.close-button:hover {
+  background-color: #f3e8ff;
+}
+
+/* Toggle Button (Desktop) */
+.toggle-button {
+  height: 100%;
+  width: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.toggle-button:hover {
+  background-color: #f3e8ff;
+}
+
+/* Header Title */
+.header-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Delete Button */
+.delete-button {
+  height: 100%;
+  width: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.delete-button:hover {
+  background-color: #f3e8ff;
+}
+
+/* Toolbar */
+.toolbar {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  position: sticky;
+  z-index: 10;
+}
+
+/* Toolbar Grid (Desktop) */
+.toolbar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+/* Toolbar Row (Mobile) */
+.toolbar-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  width: 100%; /* Ensure full width */
+}
+
+/* Toolbar Button */
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  background-color: white;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  min-width: 2.5rem;
+}
+
+.toolbar-button:hover {
+  background-color: #f3e8ff;
+  color: #BD93F9;
+}
+
+/* Editor */
+.editor {
+  flex-grow: 1;
+  background-color: #f9f9f9;
+  width: 100%;
+  margin: 0; /* Remove margin */
+  padding: 0.5rem 0; /* Vertical padding only */
+  box-sizing: border-box;
+  resize: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.editor:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #BD93F9;
+}
+
+.editor:disabled {
+  background-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+/* Icons */
+.icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.close-button .icon,
+.toggle-button .icon,
+.delete-button .icon {
+  filter: invert(20%) sepia(10%) saturate(1000%) hue-rotate(200deg) brightness(90%) contrast(90%);
+}
+
+.close-button:hover .icon,
+.toggle-button:hover .icon,
+.delete-button:hover .icon {
+  filter: invert(40%) sepia(57%) saturate(5135%) hue-rotate(247deg) brightness(98%) contrast(96%);
+}
+
+/* Text selection */
+.editor::selection {
+  background-color: rgba(189, 147, 249, 0.3);
+  color: #333333;
+}
+
+.editor::-moz-selection {
+  background-color: rgba(189, 147, 249, 0.3);
+  color: #333333;
+}
+
+/* No-select */
 .no-select {
   user-select: none;
 }
 
-/* Add smooth transitions */
-.transition-colors {
-  transition: background-color 0.2s ease;
+/* Focus outline for accessibility */
+*:focus-visible {
+  outline: 2px solid #9580FF;
+  outline-offset: 2px;
 }
 
-.transition-opacity {
-  transition: opacity 0.2s ease;
-}
-
-/* Custom scrollbar - using the theme color */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -284,28 +506,12 @@ function wrapSelection(before, after = before, multiline = false) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #bd93f9; /* Theme color */
+  background: #BD93F9;
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a775f0; /* Slightly darker shade on hover */
-}
-
-/* Text selection color */
-.editor-area::selection {
-  background-color: rgba(189, 147, 249, 0.3); /* Semi-transparent purple */
-  color: #282a36;
-}
-
-.editor-area::-moz-selection {
-  background-color: rgba(189, 147, 249, 0.3); /* Semi-transparent purple */
-  color: #282a36;
-}
-
-/* Make sure the textarea has a focus style that matches our theme */
-.editor-area:focus {
-  border-color: #bd93f9;
-  box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.2);
+  background: #A775F0;
 }
 </style>
+```

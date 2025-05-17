@@ -1,8 +1,8 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter, useFetch } from '#app';
+import { ref, inject } from 'vue';
+import { useRouter } from '#app';
 
-// Define page metadata for SEO
+// Define page metadata
 definePageMeta({
   title: 'Sign Up',
   hideDefaultNavbar: true,
@@ -11,47 +11,31 @@ definePageMeta({
 // Nuxt router
 const router = useRouter();
 
-// Reactive state for form inputs
-const name = ref('');
+// Inject store
+const store = inject('store');
+
+// Reactive state
+const username = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const passwordVisible = ref(false);
 const confirmPasswordVisible = ref(false);
-const errors = ref({});
 const isLoading = ref(false);
 
-// Form validation
-const validateForm = () => {
-  errors.value = {};
-  if (!name.value.trim()) errors.value.name = 'Name is required';
-  if (!email.value.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) errors.value.email = 'Valid email is required';
-  if (password.value.length < 6) errors.value.password = 'Password must be at least 6 characters';
-  if (password.value !== confirmPassword.value) errors.value.confirmPassword = 'Passwords do not match';
-  return Object.keys(errors.value).length === 0;
-};
-
 // Sign up handler
-const signUp = async () => {
-  if (!validateForm()) return;
+const handleSignUp = async () => {
   isLoading.value = true;
   try {
-    const { data, error } = await useFetch('/api/signup', {
-      method: 'POST',
-      body: { 
-        name: name.value,
-        email: email.value, 
-        password: password.value 
-      },
+    const redirectPath = await store.registerUser({
+      name: username.value, // Using 'name' as param to match store.registerUser
+      email: email.value,
+      password: password.value,
     });
-    if (error.value) throw new Error(error.value.message);
-    if (data.value) {
-      console.log('Sign up successful:', data.value);
-      router.push('/');
-    }
-  } catch (err) {
-    console.error('Sign up error:', err);
-    errors.value.form = 'Error creating account. Please try again.';
+    router.push(redirectPath);
+  } catch (error) {
+    console.error('Sign up error:', error);
+    alert(error.message || 'Error creating account. Please try again.');
   } finally {
     isLoading.value = false;
   }
@@ -75,19 +59,17 @@ const togglePasswordVisibility = (field) => {
       
       <!-- Form -->
       <div class="flex flex-col gap-4">
-        <!-- Name -->
+        <!-- Username -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="text-gray-700 font-medium">Name</label>
+          <label for="username" class="text-gray-700 font-medium">Username</label>
           <input
-            id="name"
-            v-model="name"
+            id="username"
+            v-model="username"
             type="text"
             class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-            placeholder="Enter your name"
-            :class="{ 'border-red-500': errors.name }"
-            aria-label="Name"
+            placeholder="Enter your username"
+            aria-label="Username"
           />
-          <p v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</p>
         </div>
         
         <!-- Email -->
@@ -99,10 +81,8 @@ const togglePasswordVisibility = (field) => {
             type="email"
             class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
             placeholder="Enter your email"
-            :class="{ 'border-red-500': errors.email }"
             aria-label="Email address"
           />
-          <p v-if="errors.email" class="text-red-500 text-sm">{{ errors.email }}</p>
         </div>
         
         <!-- Password -->
@@ -115,7 +95,6 @@ const togglePasswordVisibility = (field) => {
               :type="passwordVisible ? 'text' : 'password'"
               class="p-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
               placeholder="Enter your password"
-              :class="{ 'border-red-500': errors.password }"
               aria-label="Password"
             />
             <button
@@ -131,7 +110,6 @@ const togglePasswordVisibility = (field) => {
               />
             </button>
           </div>
-          <p v-if="errors.password" class="text-red-500 text-sm">{{ errors.password }}</p>
         </div>
         
         <!-- Confirm Password -->
@@ -144,7 +122,6 @@ const togglePasswordVisibility = (field) => {
               :type="confirmPasswordVisible ? 'text' : 'password'"
               class="p-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
               placeholder="Confirm your password"
-              :class="{ 'border-red-500': errors.confirmPassword }"
               aria-label="Confirm password"
             />
             <button
@@ -160,15 +137,11 @@ const togglePasswordVisibility = (field) => {
               />
             </button>
           </div>
-          <p v-if="errors.confirmPassword" class="text-red-500 text-sm">{{ errors.confirmPassword }}</p>
         </div>
-
-        <!-- Form Error -->
-        <p v-if="errors.form" class="text-red-500 text-sm text-center">{{ errors.form }}</p>
         
         <!-- Sign Up Button -->
         <button
-          @click="signUp"
+          @click="handleSignUp"
           :disabled="isLoading"
           class="relative w-full py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed overflow-hidden transition-colors ripple"
           aria-label="Create Account"

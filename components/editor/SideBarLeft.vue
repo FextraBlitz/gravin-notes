@@ -1,18 +1,18 @@
+```vue
 <script setup>
 import { ref, inject, computed, watch } from 'vue'
 
-// Inject notebook and control functions
 const notebook = inject('notebook', ref({ pages: [] }))
 const activePage = inject('activePage', ref(null))
 const setActivePage = inject('setActivePage', (id) => {})
 const addPage = inject('addPage', () => {})
 const deletePage = inject('deletePage', (id) => {})
+const isMobile = inject('isMobile') // Inject isMobile for mobile detection
 
-// Fallback pages in case notebook has none
 const fallbackpages = ref([
   {
     id: 1,
-    title: "YOU SHOULD NOT BE SEEING THIS",
+    title: "Welcome",
     blocks: [
       { id: 1, text: '# Welcome to Your Markdown Notebook\n\nThis is a **markdown-powered** notebook application.' },
       { id: 2, text: 'You can create multiple pages and add various content blocks.\n\n- Create lists\n- Add code snippets\n- Insert images\n- And much more!' }
@@ -20,7 +20,7 @@ const fallbackpages = ref([
   },
   {
     id: 2,
-    title: "YOU SHOULD NOT BE SEEING THIS",
+    title: "Examples",
     blocks: [
       { id: 3, text: '## Markdown Examples\n\nHere are some examples of what you can do with Markdown:' },
       { id: 4, text: '### Code Blocks\n\n```javascript\nfunction helloWorld() {\n  console.log("Hello World!");\n}\n```' },
@@ -29,14 +29,15 @@ const fallbackpages = ref([
   }
 ])
 
-// Computed: reactive pages list
 const pages = computed(() => {
-  return notebook.value?.pages?.length > 0
-    ? notebook.value.pages
-    : fallbackpages.value
+  const source = notebook.value?.pages?.length > 0 ? notebook.value.pages : fallbackpages.value
+  console.log('Pages:', source) // Debug page IDs
+  return source.map((page, index) => ({
+    ...page,
+    uniqueKey: `${page.id}-${index}` // Ensure unique key
+  }))
 })
 
-// Watch pages and initialize active page if needed
 watch(pages, (newPages) => {
   if (!activePage.value && newPages.length > 0) {
     setActivePage(newPages[0].id)
@@ -44,16 +45,21 @@ watch(pages, (newPages) => {
   }
 }, { immediate: true })
 
-// Sidebar UI state
-const isActive = ref(true)
-const setWidth = ref(300)
+// Initialize sidebar mode based on device
+const sidebarMode = ref(isMobile.value ? 'thin' : 'full')
+const setWidth = ref(isMobile.value && sidebarMode.value === 'full' ? '100%' : (sidebarMode.value === 'full' ? 300 : 50))
 const sidebarRef = ref(null)
 const cursorStyle = ref('default')
 let isResizing = false
 const RESIZE_MARGIN = 10
 
+const toggleSidebar = () => {
+  sidebarMode.value = sidebarMode.value === 'full' ? 'thin' : 'full'
+  setWidth.value = sidebarMode.value === 'full' ? (isMobile.value ? '100%' : 300) : 50
+}
+
 const checkStartResize = (e) => {
-  if (!sidebarRef.value) return
+  if (isMobile.value || !sidebarRef.value) return // Disable resizing on mobile
   const rect = sidebarRef.value.getBoundingClientRect()
   const offsetX = e.clientX - rect.left
   if (rect.width - offsetX <= RESIZE_MARGIN) {
@@ -66,7 +72,7 @@ const checkStartResize = (e) => {
 }
 
 const checkCursor = (e) => {
-  if (!sidebarRef.value) return
+  if (isMobile.value || !sidebarRef.value) return // No resize cursor on mobile
   const rect = sidebarRef.value.getBoundingClientRect()
   const offsetX = e.clientX - rect.left
   cursorStyle.value = (rect.width - offsetX <= RESIZE_MARGIN)
@@ -80,7 +86,9 @@ const resetCursor = () => {
 
 const resize = (e) => {
   if (isResizing) {
-    setWidth.value = Math.min(500, Math.max(200, e.clientX))
+    const newWidth = Math.min(500, Math.max(200, e.clientX))
+    setWidth.value = newWidth
+    sidebarMode.value = 'full' // Ensure full mode during resizing
   }
 }
 
@@ -91,13 +99,11 @@ const stop = () => {
   document.removeEventListener('mouseup', stop)
 }
 
-// Handle page selection
 const handlePageClick = (pageId) => {
   setActivePage(pageId)
   console.log('Page selected:', pageId)
 }
 
-// Handle delete with confirmation
 const confirmDeletePage = (event, pageId) => {
   event.stopPropagation()
   if (confirm("Delete this page?")) {
@@ -105,7 +111,6 @@ const confirmDeletePage = (event, pageId) => {
   }
 }
 
-// Display title safely
 const formatPageTitle = (page) => {
   if (!page) return 'Untitled Page'
   return page.title || `Page ${page.id}`
@@ -113,70 +118,92 @@ const formatPageTitle = (page) => {
 </script>
 
 <template>
-  <div ref="sidebarRef"
+  <div
+    ref="sidebarRef"
+    :class="{ 'bg-gray-100': true, 'h-[calc(100vh-4rem)]': true, 'shrink-0': !isMobile, 'mobile-fixed-sidebar': isMobile, 'z-[10]': true}"
+    :style="{ width: typeof setWidth === 'number' ? setWidth + 'px' : setWidth, cursor: cursorStyle }"
     @mousemove="checkCursor"
     @mouseleave="resetCursor"
     @mousedown="checkStartResize"
-    :style="{ width: setWidth + 'px', cursor: cursorStyle }"
-    class="bg-[#e8e8e0] h-[calc(100vh-2rem)] sticky top-[2rem] shrink-0" >
+    role="navigation"
+    :aria-label="sidebarMode === 'full' ? 'Page navigation' : 'Collapsed page navigation'"
+    :aria-expanded="sidebarMode === 'full'"
+  >
     <div class="relative flex flex-col h-full">
       <!-- Sidebar Header -->
-      <div class="w-full h-[3rem] flex bg-[#d8d8d0] border-b border-[#c8c8c0]">
-        <div @click="isActive = !isActive" class='h-full aspect-square flex items-center justify-center hover:bg-[#bd93f9] transition-colors'>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#282a36]" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="h-full flex-1 inline-flex items-center px-3 font-medium text-[#282a36]">
-          <div>Pages</div>
+      <div class="w-full h-12 flex bg-white border-b border-gray-200 shadow-md rounded-t-md backdrop-blur-md">
+        <button
+          @click="toggleSidebar"
+          class="h-full aspect-square flex items-center justify-center hover:bg-purple-100 transition-colors"
+          :aria-label="sidebarMode === 'full' ? 'Collapse sidebar' : 'Expand sidebar'"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/menu.svg" alt="Menu icon" class="h-5 w-5 text-gray-800">
+        </button>
+        <div v-if="sidebarMode === 'full'" class="h-full flex-1 inline-flex items-center px-3 font-medium text-gray-800">
+          Pages
         </div>
       </div>
 
       <!-- Pages List -->
-      <div id="Notebooks" :class="`overflow-y-auto max-h-[calc(100vh-3rem-2rem)] bg-[#f0f0ea] ${isActive ? 'block' : 'hidden'}`">
-        <ul class="p-2">
-          <!-- Page items -->
-          <li 
-            v-for="page in pages || fallbackpages" 
-            :key="page.id"
+      <div
+        :class="`overflow-y-auto max-h-[calc(100vh-4rem-3rem)] bg-gray-100 ${sidebarMode === 'full' ? 'p-4' : 'py-4'}`"
+      >
+        <ul class="space-y-2">
+          <!-- Page items (Full Mode) -->
+          <li
+            v-if="sidebarMode === 'full'"
+            v-for="page in pages"
+            :key="page.uniqueKey"
             @click="handlePageClick(page.id)"
-            :class="[
-              'flex justify-between items-center px-3 py-2 rounded-md', 
-              'cursor-pointer mb-1 group',
-              activePage.value === page.id ? 'bg-[#d7d4f0] text-[#282a36]' : 'hover:bg-[#e0e0da] text-[#282a36]'
-            ]"
+            class="flex justify-between items-center px-3 py-2 rounded-md bg-white shadow-sm hover:bg-purple-100 transition-colors duration-150 cursor-pointer"
+            :class="activePage === page.id ? 'border-purple-500 border-2' : 'border-gray-200 border'"
+            :aria-label="`Select page: ${formatPageTitle(page)}`"
           >
-            <span class="truncate">{{ formatPageTitle(page) }}</span>
-            <button 
-              @click="(e) => confirmDeletePage(e, page.id)" 
-              class="text-[#6272a4] hover:text-[#ff5555] opacity-0 group-hover:opacity-100 transition-opacity"
+            <span class="truncate text-gray-800">{{ formatPageTitle(page) }}</span>
+            <button
+              @click="(e) => confirmDeletePage(e, page.id)"
+              class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
               title="Delete page"
+              aria-label="Delete page"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
+              <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trash-2.svg" alt="Delete icon" class="h-4 w-4">
             </button>
           </li>
-
-          <!-- Add Page Button -->
-          <li 
-            @click="addPage" 
-            class="flex items-center px-3 py-2 rounded-md bg-[#f0f0ea] hover:bg-[#8be9fd] cursor-pointer border border-dashed border-[#bd93f9] mt-2 text-[#282a36]"
+          <!-- Page items (Thin Mode) -->
+          <li
+            v-else
+            v-for="page in pages"
+            @click="handlePageClick(page.id)"
+            class="flex justify-center items-center h-10 w-10 mx-auto rounded-full bg-white shadow-sm hover:bg-purple-100 transition-colors duration-150 cursor-pointer"
+            :class="activePage === page.id ? 'border-purple-500 border-2' : 'border-gray-200 border'"
+            :aria-label="`Select page ${page.id}`"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
-            <span>Add Page</span>
+            <span class="text-gray-800 font-medium">{{ page.id }}</span>
+          </li>
+          <hr v-if="sidebarMode === 'full'" class="border-gray-200 my-4">
+          <!-- Add Page Button (Full Mode Only) -->
+          <li
+            v-if="sidebarMode === 'full'"
+            @click="addPage"
+            class="flex items-center px-3 py-2 rounded-md bg-purple-500 hover:bg-purple-600 text-white shadow-sm transition-colors duration-150 cursor-pointer"
+            aria-label="Add new page"
+          >
+            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/plus.svg" alt="Add icon" class="h-4 w-4 mr-2">
+            Add Page
           </li>
         </ul>
       </div>
       
       <!-- Resize Handle -->
       <div
-        class="absolute top-0 right-0 h-full cursor-ew-resize z-50"
+        v-if="!isMobile"
+        class="absolute top-0 right-0 h-full z-[0]"
         :style="{ width: RESIZE_MARGIN + 'px' }"
         @mousedown="checkStartResize"
-      ></div>
+        aria-hidden="true"
+      >
+        <div class="w-1 h-full bg-purple-100 opacity-30 hover:opacity-50 cursor-ew-resize"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -186,13 +213,42 @@ const formatPageTitle = (page) => {
   user-select: none;
 }
 
-/* Add smooth transitions */
-.transition-colors {
-  transition: background-color 0.2s ease;
+.mobile-fixed-sidebar {
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  z-index: 50;
+  height: calc(100vh - 4rem);
 }
 
-.transition-opacity {
-  transition: opacity 0.2s ease;
+/* Desktop styling */
+@media (min-width: 768px) {
+  .mobile-fixed-sidebar {
+    position: sticky;
+    top: 4rem;
+    z-index: 60;
+  }
+}
+
+/* Focus outline for accessibility */
+*:focus-visible {
+  outline: 2px solid #9580FF;
+  outline-offset: 2px;
+}
+
+/* Icon colors */
+img[src*="lucide-static"] {
+  filter: invert(20%) sepia(10%) saturate(1000%) hue-rotate(200deg) brightness(90%) contrast(90%);
+}
+
+/* Hover effect for icons */
+button:hover img[src*="lucide-static"], li:hover img[src*="lucide-static"] {
+  filter: invert(40%) sepia(57%) saturate(5135%) hue-rotate(247deg) brightness(98%) contrast(96%);
+}
+
+/* White icons for purple buttons */
+.bg-purple-500 img[src*="lucide-static"], .bg-purple-600 img[src*="lucide-static"] {
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
 }
 
 /* Custom scrollbar */
@@ -205,11 +261,12 @@ const formatPageTitle = (page) => {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #bd93f9;
+  background: #BD93F9;
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8be9fd;
+  background: #A775F0;
 }
 </style>
+```

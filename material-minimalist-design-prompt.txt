@@ -1,0 +1,92 @@
+# Material & Minimalist Design Prompt with Dracula Alucard Light Theme
+
+## Purpose
+Please help me design my user interface using Material Design and minimalist principles while incorporating the Dracula Alucard light theme, particularly using its purple color as accent.
+
+## Design Philosophy
+- Follow **Material Design 3** principles with an emphasis on minimalism
+- Use the **Dracula Alucard light theme** as the color foundation
+- Apply **purple accents** strategically for visual emphasis and branding
+- Prioritize **clean, uncluttered layouts** with ample white space
+- Focus on **typography hierarchy** for better readability and structure
+
+## Color Palette Reference
+- **Background**: Clean white (#FFFFFF) or very light gray (#F8F8F8)
+- **Primary Text**: Dark gray (#333333)
+- **Secondary Text**: Medium gray (#666666)
+- **Primary Purple Accent**: Dracula Alucard purple (#BD93F9)
+- **Secondary Purple Accent**: Darker purple for contrast (#9580FF)
+- **Tertiary Colors**: Light purple for subtle elements (#F8F0FE)
+- **Surface Colors**: White or very light purple tint for cards and containers
+- **Error/Alert**: Use sparingly (#FF5555)
+
+## Typography
+- **Primary Font**: [Sans-serif font preference, e.g., Roboto, Inter, or System UI]
+- **Hierarchy**:
+  - H1: 24-32px, medium/semi-bold weight
+  - H2: 20-24px, medium weight
+  - H3: 16-18px, medium weight
+  - Body: 14-16px, regular weight
+  - Caption: 12px, regular or light weight
+- **Line Height**: 1.5 for body text, 1.2-1.3 for headings
+- **Letter Spacing**: Slightly increased for headings (0.5px)
+
+## Component Styling
+- **Buttons**:
+  - Primary: Purple fill (#BD93F9) with white text
+  - Secondary: White/transparent with purple outline
+  - Text buttons: Purple text with no background
+  - Subtle hover states (slight darkening or lightening)
+  - Rounded corners (8px radius)
+  
+- **Cards & Containers**:
+  - Very subtle shadow (2-4px blur, 10% opacity)
+  - White or very light purple tint background
+  - Rounded corners (8-12px radius)
+  - Minimal border or borderless design
+  
+- **Navigation**:
+  - Clean, uncluttered navigation bar
+  - Purple indicator for active state
+  - Simple icons with optional labels
+  
+- **Input Fields**:
+  - Minimal styling with subtle outlines
+  - Purple focus states
+  - Clear, accessible labels
+  - Animated focus effects (subtle)
+
+## Animation & Interaction
+- Subtle, quick animations (150-300ms)
+- Minimal use of animations for functional feedback only
+- Purple ripple effects on interactive elements
+- Simple transitions between states
+
+## Accessibility Considerations
+- Ensure sufficient contrast between text and backgrounds
+- Use semantic HTML elements
+- Provide focus indicators for keyboard navigation
+- Test color combinations for accessibility
+
+## Layout Guidelines
+- Responsive grid system with 8px base unit
+- 16-32px margins and padding
+- Consistent spacing between elements
+- Content hierarchically organized
+- Strategic use of white space
+
+## Examples to Reference
+When helping me style my page, please provide specific examples of:
+1. Color combinations for different UI elements
+2. Typography hierarchy implementation
+3. Component styling (buttons, cards, inputs)
+4. Layout organization recommendations
+5. CSS snippets that implement these design principles
+
+## When I Submit My Code
+When I share my code with you in the future, please:
+1. Analyze my current design approach
+2. Suggest improvements based on Material Design and minimalist principles
+3. Incorporate the Dracula Alucard light theme with purple accents
+4. Provide specific CSS modifications that maintain my functionality
+5. Consider responsive design for different screen sizes

@@ -1,8 +1,8 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter, useFetch } from '#app';
+import { ref, inject } from 'vue';
+import { useRouter } from '#app';
 
-// Define page metadata for SEO
+// Define page metadata
 definePageMeta({
   title: 'Sign In',
   hideDefaultNavbar: true,
@@ -11,46 +11,29 @@ definePageMeta({
 // Nuxt router
 const router = useRouter();
 
-// Reactive state for form inputs
-const email = ref('');
+// Inject store
+const store = inject('store');
+
+// Reactive state
+const username = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 const passwordVisible = ref(false);
-const errors = ref({});
 const isLoading = ref(false);
 
-// Form validation
-const validateForm = () => {
-  errors.value = {};
-  if (!email.value.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) errors.value.email = 'Valid email is required';
-  if (password.value.length < 6) errors.value.password = 'Password must be at least 6 characters';
-  return Object.keys(errors.value).length === 0;
-};
-
 // Login handler
-const login = async () => {
-  if (!validateForm()) return;
+const handleLogin = async () => {
   isLoading.value = true;
   try {
-    const { data, error } = await useFetch('/api/login', {
-      method: 'POST',
-      body: { 
-        email: email.value, 
-        password: password.value, 
-        rememberMe: rememberMe.value 
-      },
+    const redirectPath = await store.authenticateUser({
+      email: username.value, // Using 'email' as param to match store.authenticateUser
+      password: password.value,
+      rememberMe: rememberMe.value,
     });
-    if (error.value) throw new Error(error.value.message);
-    if (data.value) {
-      console.log('Login successful:', data.value);
-      if (rememberMe.value) {
-        console.log('Storing credentials for rememberMe');
-      }
-      router.push('/');
-    }
-  } catch (err) {
-    console.error('Login error:', err);
-    errors.value.form = 'Invalid email or password. Please try again.';
+    router.push(redirectPath);
+  } catch (error) {
+    console.error('Login error:', error);
+    alert(error.message || 'Invalid username or password. Please try again.');
   } finally {
     isLoading.value = false;
   }
@@ -66,23 +49,21 @@ const togglePasswordVisibility = () => {
   <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6 flex flex-col gap-6">
       <h1 class="text-2xl font-bold text-gray-800 text-center">Sign In</h1>
-      <p class="text-gray-600 text-center">Log in by entering your email address and password.</p>
+      <p class="text-gray-600 text-center">Log in by entering your username and password.</p>
       
       <!-- Form -->
       <div class="flex flex-col gap-4">
-        <!-- Email -->
+        <!-- Username -->
         <div class="flex flex-col gap-2">
-          <label for="email" class="text-gray-700 font-medium">Email Address</label>
+          <label for="username" class="text-gray-700 font-medium">Username</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
+            id="username"
+            v-model="username"
+            type="text"
             class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-            placeholder="Enter your email"
-            :class="{ 'border-red-500': errors.email }"
-            aria-label="Email address"
+            placeholder="Enter your username"
+            aria-label="Username"
           />
-          <p v-if="errors.email" class="text-red-500 text-sm">{{ errors.email }}</p>
         </div>
         
         <!-- Password -->
@@ -95,7 +76,6 @@ const togglePasswordVisibility = () => {
               :type="passwordVisible ? 'text' : 'password'"
               class="p-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
               placeholder="Enter your password"
-              :class="{ 'border-red-500': errors.password }"
               aria-label="Password"
             />
             <button
@@ -111,12 +91,8 @@ const togglePasswordVisibility = () => {
               />
             </button>
           </div>
-          <p v-if="errors.password" class="text-red-500 text-sm">{{ errors.password }}</p>
           <NuxtLink to="/forgot-password" class="text-sm text-purple-500 hover:underline text-right">Forgot password?</NuxtLink>
         </div>
-        
-        <!-- Form Error -->
-        <p v-if="errors.form" class="text-red-500 text-sm text-center">{{ errors.form }}</p>
         
         <!-- Remember Me -->
         <div class="flex items-center gap-2">
@@ -132,7 +108,7 @@ const togglePasswordVisibility = () => {
         
         <!-- Login Button -->
         <button
-          @click="login"
+          @click="handleLogin"
           :disabled="isLoading"
           class="relative w-full py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed overflow-hidden transition-colors ripple"
           aria-label="Log in"

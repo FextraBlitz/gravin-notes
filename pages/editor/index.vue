@@ -1,16 +1,20 @@
+```vue
 <script setup>
-import { ref, watch, onMounted, nextTick, computed, provide } from 'vue'
-
+import { ref, watch, onMounted, nextTick, computed, provide } from 'vue';
+import { inject } from 'vue';
+import { useRoute } from 'vue-router';
 import SideBarLeft from '~/components/editor/SideBarLeft.vue';
 import SideBarRight from '~/components/editor/SideBarRight.vue';
 import RegularText from '~/components/editor/content-types/RegularText.vue';
 import EditorNavBar from '~/components/editor/EditorNavBar.vue';
+import AISummarizerDialog from '~/components/editor/AISummarizerDialog.vue';
 
 definePageMeta({
   hideDefaultNavbar: true
 });
 
-// New data structure: notebook as the main object with pages containing blocks
+const isMobile = inject('isMobile');
+
 const notebook = ref({
   id: 1,
   title: "My Markdown Notebook",
@@ -37,22 +41,18 @@ const notebook = ref({
   lastSaved: null
 });
 
-// Track which page is currently active
 const activePage = ref(1);
 const activeBlock = ref(null);
 const currentTextboxText = ref('');
 
-// Get the current page based on activePage
 const currentPage = computed(() => {
   return notebook.value.pages.find(page => page.id === activePage.value) || notebook.value.pages[0];
 });
 
-// Get blocks of the current page
 const currentBlocks = computed(() => {
   return currentPage.value?.blocks || [];
 });
 
-// Watch for active block changes to update the text
 watch(() => activeBlock.value, (newId) => {
   if (newId !== null) {
     const block = findBlockById(newId);
@@ -62,7 +62,6 @@ watch(() => activeBlock.value, (newId) => {
   }
 });
 
-// Utility to find a block across all pages
 const findBlockById = (blockId) => {
   for (const page of notebook.value.pages) {
     const block = page.blocks.find(b => b.id === blockId);
@@ -71,11 +70,9 @@ const findBlockById = (blockId) => {
   return null;
 };
 
-// Block management
 const blockRefs = ref({});
 const blockMethods = ref({});
 
-// Get next available ID for a new block
 const getNextBlockId = () => {
   const allBlockIds = notebook.value.pages.flatMap(page => 
     page.blocks.map(block => block.id)
@@ -83,13 +80,11 @@ const getNextBlockId = () => {
   return allBlockIds.length > 0 ? Math.max(...allBlockIds) + 1 : 1;
 };
 
-// Get next available ID for a new page
 const getNextPageId = () => {
   const pageIds = notebook.value.pages.map(page => page.id);
   return pageIds.length > 0 ? Math.max(...pageIds) + 1 : 1;
 };
 
-// Register block references and methods
 const registerRef = (el, id) => {
   if (el) blockRefs.value[id] = el;
 };
@@ -98,7 +93,6 @@ const registerMethods = (id, methods) => {
   blockMethods.value[id] = methods;
 };
 
-// Add a new block to the current page
 const addBlock = () => {
   const newId = getNextBlockId();
   if (currentPage.value) {
@@ -112,7 +106,6 @@ const addBlock = () => {
   }
 };
 
-// Add a new page to the notebook
 const addPage = () => {
   const newPageId = getNextPageId();
   notebook.value.pages.push({
@@ -123,7 +116,6 @@ const addPage = () => {
   activePage.value = newPageId;
 };
 
-// Set the active block
 const sidebarRef = ref(null);
 const setActiveBlock = (id) => {
   activeBlock.value = id;
@@ -138,14 +130,17 @@ const setActiveBlock = (id) => {
   }
 };
 
-// Set the active page
+const closeRightSidebar = () => {
+  activeBlock.value = null;
+  currentTextboxText.value = '';
+};
+
 const setActivePage = (pageId) => {
   activePage.value = pageId;
   activeBlock.value = null;
   currentTextboxText.value = '';
 };
 
-// Delete a block
 const deleteBlock = (idToDelete) => {
   for (const page of notebook.value.pages) {
     const blockIndex = page.blocks.findIndex(b => b.id === idToDelete);
@@ -163,7 +158,6 @@ const deleteBlock = (idToDelete) => {
   console.warn(`Block with ID ${idToDelete} not found`);
 };
 
-// Delete a page
 const deletePage = (pageId) => {
   const pageIndex = notebook.value.pages.findIndex(p => p.id === pageId);
   if (pageIndex !== -1) {
@@ -190,7 +184,6 @@ const deletePage = (pageId) => {
   }
 };
 
-// Update block text
 const updateText = (newText) => {
   if (activeBlock.value !== null) {
     const block = findBlockById(activeBlock.value);
@@ -201,7 +194,6 @@ const updateText = (newText) => {
   }
 };
 
-// Update page title
 const updatePageTitle = (pageId, newTitle) => {
   const page = notebook.value.pages.find(p => p.id === pageId);
   if (page) {
@@ -209,12 +201,10 @@ const updatePageTitle = (pageId, newTitle) => {
   }
 };
 
-// Update notebook title
 const updateNotebookTitle = (newTitle) => {
   notebook.value.title = newTitle;
 };
 
-// Save the notebook as a JSON file with .gnb extension
 const saveNotebook = () => {
   notebook.value.lastSaved = new Date().toISOString();
   const notebookData = JSON.stringify(notebook.value, null, 2);
@@ -229,7 +219,6 @@ const saveNotebook = () => {
   document.body.removeChild(a);
 };
 
-// Load notebook data from a file
 const loadNotebook = (notebookData) => {
   try {
     activeBlock.value = null;
@@ -248,7 +237,44 @@ const loadNotebook = (notebookData) => {
   }
 };
 
-// Load notebook data on component mount
+// AI Summarizer Dialog
+const isDialogOpen = ref(false);
+
+const openDialog = () => {
+  isDialogOpen.value = true;
+};
+
+const handleSummarizeSubmit = async ({ file, prompt }) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('prompt', prompt);
+  try {
+    // Mock backend submission
+    console.log('Submitting to backend:', { file: file.name, prompt });
+    // Replace with actual endpoint
+    // const res = await fetch('/api/summarize', { method: 'POST', body: formData });
+    // const { summary } = await res.json();
+    const mockSummary = `Mock AI Summary for ${file.name}:\nThis is a sample summary generated for testing purposes.`;
+    if (currentPage.value) {
+      const newId = getNextBlockId();
+      currentPage.value.blocks.push({
+        id: newId,
+        text: `## AI Summary\n\n${mockSummary}`
+      });
+      nextTick(() => {
+        activeBlock.value = newId;
+        const block = findBlockById(newId);
+        if (block) {
+          currentTextboxText.value = block.text;
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error submitting summarization:', error);
+    alert('Failed to submit summarization.');
+  }
+};
+
 onMounted(async () => {
   try {
     const res = await fetch('/api/user/notebook');
@@ -268,9 +294,13 @@ onMounted(async () => {
   document.addEventListener('save-notebook', () => {
     saveNotebook();
   });
+  // Auto-open dialog if query param exists
+  const route = useRoute();
+  if (route.query.openSummarizer === 'true') {
+    openDialog();
+  }
 });
 
-// Provide values to child components
 provide('notebook', notebook);
 provide('activePage', activePage);
 provide('setActivePage', setActivePage);
@@ -279,98 +309,501 @@ provide('deletePage', deletePage);
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen bg-[#f0f0ea]">
-    <!-- Header (Fixed) -->
-    <EditorNavBar 
-      :title="notebook.title" 
-      @update-title="updateNotebookTitle"
-      @save-notebook="saveNotebook"
-      @load-notebook="loadNotebook"
-      class="fixed top-0 left-0 right-0 z-50"
-    />
-    
-    <!-- Main Content Area -->
-    <div class="flex flex-1 pt-[4rem]">
-      <!-- Left Sidebar (Sticky) -->
-      <SideBarLeft class="w-[250px] h-[calc(100vh-4rem)] sticky top-[4rem]" />
-      
-      <!-- Main Content (Scrollable) -->
-      <div class="flex-1 overflow-y-auto h-[calc(100vh-4rem)] p-4 bg-[#ffffff] shadow-sm">
-        <div v-if="currentPage" class="mb-4 border-b pb-2 border-[#c8c8c0]">
-          <div class="flex items-center justify-between group">
-            <h2 class="text-xl font-medium text-[#282a36] group-hover:hidden">
-              {{ currentPage.title || 'Untitled Page' }}
-            </h2>
-            <input 
-              type="text" 
-              v-model="currentPage.title" 
-              @change="updatePageTitle(currentPage.id, currentPage.title)"
-              class="border border-[#c8c8c0] rounded px-2 py-1 text-xl font-medium text-[#282a36] hidden group-hover:block w-full bg-[#f0f0ea] focus:outline-none focus:border-[#bd93f9]"
-              placeholder="Page title"
-            />
+  <div class="main-container">
+    <!-- Mobile Layout -->
+    <div v-if="isMobile" class="mobile-container">
+      <EditorNavBar 
+        :title="notebook.title" 
+        @update-title="updateNotebookTitle"
+        @save-notebook="saveNotebook"
+        @load-notebook="loadNotebook"
+        class="navbar"
+      >
+        <template #extra>
+          <button
+            @click="openDialog"
+            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
+            aria-label="Open AI Summarizer"
+          >
+            <img
+              src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg"
+              alt="Summarizer icon"
+              class="h-4 w-4"
+            >
+            AI Summarizer
+          </button>
+        </template>
+      </EditorNavBar>
+      <div class="content">
+        <div class="main-content">
+          <SideBarLeft class="sidebar-left" />
+          <div class="page-container" :class="{ 'full-width': !activeBlock }">
+            <div class="page-header">
+              <h2 v-show="!editPageTitle" @click="editPageTitle = true" class="page-title" aria-label="Page title">
+                {{ currentPage.title || 'Untitled Page' }}
+              </h2>
+              <input 
+                v-show="editPageTitle"
+                type="text" 
+                v-model="currentPage.title" 
+                @blur="editPageTitle = false"
+                @keyup.enter="editPageTitle = false"
+                @change="updatePageTitle(currentPage.id, currentPage.title)"
+                class="page-title-input"
+                placeholder="Page title"
+                aria-label="Edit page title"
+              />
+            </div>
+            <div class="blocks-container">
+              <RegularText
+                v-for="block in currentBlocks"
+                :key="block.id"
+                :id="block.id"
+                :text="block.text"
+                :selected="block.id === activeBlock"
+                :render="true"
+                @select="setActiveBlock"
+                @update="updateText"
+                @register-methods="registerMethods"
+                class="block"
+              />
+            </div>
+            <div class="flex gap-2">
+              <button
+                @click="addBlock"
+                class="add-block-button flex-1"
+                aria-label="Add new block"
+              >
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/plus.svg" alt="Add icon" class="icon">
+                Add Block
+              </button>
+              <button
+                @click="openDialog"
+                class="add-block-button flex-1 bg-purple-600 hover:bg-purple-700"
+                aria-label="Import PDF"
+              >
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Import PDF icon" class="icon">
+                Import PDF
+              </button>
+            </div>
           </div>
-        </div>
-        
-        <!-- Block Content -->
-        <div class="space-y-4">
-          <RegularText
-            v-for="block in currentBlocks"
-            :key="block.id"
-            :id="block.id"
-            :text="block.text"
-            :selected="block.id === activeBlock"
-            :render="true"
-            @select="setActiveBlock"
-            @update="updateText"
-            @register-methods="registerMethods"
+          <SideBarRight
+            v-if="activeBlock"
+            ref="sidebarRef"
+            v-model="currentTextboxText"
+            :id="activeBlock"
+            @delete="deleteBlock"
+            @update:modelValue="updateText"
+            @close="closeRightSidebar"
+            class="sidebar-right"
           />
         </div>
-        
-        <!-- Add Block Button -->
-        <div
-          @click="addBlock"
-          class="mt-4 flex items-center justify-center h-12 bg-[#d8d8d0] hover:bg-[#bd93f9] transition-colors rounded-md cursor-pointer text-[#282a36]"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-          </svg>
-          ADD BLOCK
-        </div>
       </div>
-      
-      <!-- Right Sidebar (Sticky) -->
-      <SideBarRight
-        ref="sidebarRef"
-        v-model="currentTextboxText"
-        :id="activeBlock"
-        @delete="deleteBlock"
-        @update:modelValue="updateText"
-        class="w-[300px] h-[calc(100vh-4rem)] sticky top-[4rem]"
-      />
     </div>
+
+    <!-- Desktop Layout -->
+    <div v-else class="desktop-container">
+      <EditorNavBar 
+        :title="notebook.title" 
+        @update-title="updateNotebookTitle"
+        @save-notebook="saveNotebook"
+        @load-notebook="loadNotebook"
+        class="navbar"
+      >
+        <template #extra>
+          <button
+            @click="openDialog"
+            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
+            aria-label="Open AI Summarizer"
+          >
+            <img
+              src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg"
+              alt="Summarizer icon"
+              class="h-4 w-4"
+            >
+            AI Summarizer
+          </button>
+        </template>
+      </EditorNavBar>
+      <div class="main-content">
+        <SideBarLeft class="sidebar-left-desktop" />
+        <div class="content-area" role="main" aria-label="Editor content">
+          <div class="page-container-desktop">
+            <div v-if="currentPage" class="page-header-desktop">
+              <div class="page-header-inner">
+                <h2 v-show="!editPageTitle" @click="editPageTitle = true" class="page-title-desktop" aria-label="Page title">
+                  {{ currentPage.title || 'Untitled Page' }}
+                </h2>
+                <input 
+                  v-show="editPageTitle"
+                  type="text" 
+                  v-model="currentPage.title" 
+                  @blur="editPageTitle = false"
+                  @keyup.enter="editPageTitle = false"
+                  @change="updatePageTitle(currentPage.id, currentPage.title)"
+                  class="page-title-input-desktop"
+                  placeholder="Page title"
+                  aria-label="Edit page title"
+                />
+              </div>
+            </div>
+            <div class="blocks-container-desktop">
+              <RegularText
+                v-for="block in currentBlocks"
+                :key="block.id"
+                :id="block.id"
+                :text="block.text"
+                :selected="block.id === activeBlock"
+                :render="true"
+                @select="setActiveBlock"
+                @update="updateText"
+                @register-methods="registerMethods"
+                class="block-desktop"
+              />
+            </div>
+            <hr class="divider">
+            <div class="flex gap-2">
+              <button
+                @click="addBlock"
+                class="add-block-button-desktop flex-1"
+                aria-label="Add new block"
+              >
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/plus.svg" alt="Add icon" class="icon">
+                Add Block
+              </button>
+              <button
+                @click="openDialog"
+                class="add-block-button-desktop flex-1 bg-purple-600 hover:bg-purple-700"
+                aria-label="Import PDF"
+              >
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/file-text.svg" alt="Import PDF icon" class="icon">
+                Import PDF
+              </button>
+            </div>
+          </div>
+        </div>
+        <SideBarRight
+          ref="sidebarRef"
+          v-model="currentTextboxText"
+          :id="activeBlock"
+          @delete="deleteBlock"
+          @update:modelValue="updateText"
+          @close="closeRightSidebar"
+          class="sidebar-right-desktop"
+        />
+      </div>
+    </div>
+    <!-- AI Summarizer Dialog -->
+    <AISummarizerDialog
+      :is-open="isDialogOpen"
+      @update:isOpen="isDialogOpen = $event"
+      @submit="handleSummarizeSubmit"
+    />
   </div>
 </template>
 
+<script>
+export default {
+  data() {
+    return {
+      editPageTitle: false
+    }
+  }
+}
+</script>
+
 <style scoped>
-.transition-colors {
-  transition: background-color 0.2s ease, color 0.2s ease;
+/* CSS Reset */
+html, body {
+  margin: 0;
+  padding: 0;
 }
 
-/* Custom scrollbar for the main content area */
-.main-content::-webkit-scrollbar {
+/* Main Container */
+.main-container {
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-top));
+  background-color: #f3f4f6;
+}
+
+/* Mobile Layout */
+.mobile-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-top));
+  padding-bottom: 4rem;
+}
+
+/* Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 75;
+}
+
+/* Content */
+.content {
+  padding: 0.5rem;
+  padding-top: 3rem; /* Offset for navbar height */
+}
+
+/* Main Content (Mobile) */
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+/* Sidebar Left */
+.sidebar-left {
+  flex-shrink: 0;
+}
+
+/* Page Container */
+.page-container {
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.page-container.full-width {
+  margin-left: 50px; /* Offset for thin sidebar */
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* Page Title */
+.page-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.page-title:hover {
+  background-color: #f9fafb;
+}
+
+/* Page Title Input */
+.page-title-input {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1f2937;
+  background-color: white;
+}
+
+.page-title-input:focus {
+  outline: none;
+  border-color: #BD93F9;
+  box-shadow: 0 0 0 2px #BD93F9;
+}
+
+/* Blocks Container */
+.blocks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; /* Reduced from 0.5rem (8px) to 0.25rem (4px) */
+}
+
+/* Block */
+.block {
+  transition: outline 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* Add Block Button */
+.add-block-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  background-color: #BD93F9;
+  color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.15s ease;
+}
+
+/* Sidebar Right */
+.sidebar-right {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+/* Desktop Layout */
+.desktop-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: calc(100vh - env(safe-area-inset-top));
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  padding-top: 4rem; /* Offset for navbar */
+}
+
+.sidebar-left-desktop {
+  height: calc(100vh - 4rem);
+  position: sticky;
+  top: 4rem;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  height: calc(100vh - 4rem);
+  padding: 1.5rem;
+  background-color: #f3f4f6;
+}
+
+.page-container-desktop {
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.page-header-desktop {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.page-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-title-desktop {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.page-title-desktop:hover {
+  background-color: #f9fafb;
+}
+
+.page-title-input-desktop {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1f2937;
+  background-color: white;
+}
+
+.page-title-input-desktop:focus {
+  outline: none;
+  border-color: #BD93F9;
+  box-shadow: 0 0 0 2px #BD93F9;
+}
+
+.blocks-container-desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Reduced from 1rem (16px) to 0.5rem (8px) */
+}
+
+.block-desktop {
+  transition: outline 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.divider {
+  border-color: #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+.add-block-button-desktop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  background-color: #BD93F9;
+  color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.15s ease;
+}
+
+.add-block-button-desktop:hover {
+  background-color: #A775F0;
+}
+
+.sidebar-right-desktop {
+  height: calc(100vh - 4rem);
+  position: sticky;
+  top: 4rem;
+}
+
+/* Icons */
+.icon {
+  height: 1rem;
+  width: 1rem;
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}
+
+/* Focus outline for accessibility */
+*:focus-visible {
+  outline: 2px solid #9580FF;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
   width: 4px;
 }
 
-.main-content::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.main-content::-webkit-scrollbar-thumb {
-  background: #bd93f9;
+::-webkit-scrollbar-thumb {
+  background: #BD93F9;
   border-radius: 2px;
 }
 
-.main-content::-webkit-scrollbar-thumb:hover {
-  background: #8be9fd;
+::-webkit-scrollbar-thumb:hover {
+  background: #A775F0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-container {
+    padding-bottom: 4rem;
+  }
 }
 </style>
+```
