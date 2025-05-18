@@ -1,8 +1,7 @@
 ```vue
 <script setup>
 import { ref, watch, onMounted, nextTick, computed, provide } from 'vue';
-import { inject } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import SideBarLeft from '~/components/editor/SideBarLeft.vue';
 import SideBarRight from '~/components/editor/SideBarRight.vue';
 import RegularText from '~/components/editor/content-types/RegularText.vue';
@@ -13,46 +12,103 @@ definePageMeta({
   hideDefaultNavbar: true
 });
 
-const isMobile = inject('isMobile');
+const isMobile = inject('isMobile', false);
+const route = useRoute();
+const router = useRouter();
+const isLoading = ref(false);
+const isSummarizing = ref(false);
 
+// Notebook state
 const notebook = ref({
-  id: 1,
-  title: "My Markdown Notebook",
-  pages: [
-    {
-      id: 1,
-      title: "Getting Started",
-      blocks: [
-        { id: 1, text: '# Welcome to Your Gravin Notebook\n\nThis is a **markdown-powered** notebook application.' },
-        { id: 2, text: 'You can create multiple pages and add various content blocks.\n\n- Create lists\n- Add code snippets\n- Insert images\n- And much more!' }
-      ]
-    },
-    {
-      id: 2,
-      title: "Markdown Examples",
-      blocks: [
-        { id: 3, text: '## Markdown Examples\n\n Here are some examples of what you can do with the markdown functionality:' },
-        { id: 4, text: '### Code Blocks\n\n```javascript\nfunction helloWorld() {\n  console.log("Hello World!");\n}\n```' },
-        { id: 5, text: '### Tables\n\n| Name | Email | Role |\n|------|-------|------|\n| John | john@example.com | Admin |\n| Jane | jane@example.com | Editor |' }
-      ]
-    }
-  ],
+  id: null,
+  title: 'Welcome to Gravin Notebook',
+  pages: [],
   userdata: {},
   lastSaved: null
 });
 
-const activePage = ref(1);
+const activePage = ref(null);
 const activeBlock = ref(null);
 const currentTextboxText = ref('');
+const isDialogOpen = ref(false);
+const ownedNotebookIds = ref([]);
 
+// AI Summarizer Dialog (moved before watch)
+const openDialog = () => {
+  console.log('Opening AI Summarizer dialog');
+  isDialogOpen.value = true;
+};
+
+const handleSummarizeSubmit = async ({ summary }) => {
+  isSummarizing.value = true;
+  try {
+    if (currentPage.value) {
+      const newId = getNextBlockId();
+      currentPage.value.blocks.push({
+        id: newId,
+        text: `## AI Summary\n\n${summary}`
+      });
+      nextTick(() => {
+        activeBlock.value = newId;
+        const block = findBlockById(newId);
+        if (block) {
+          currentTextboxText.value = block.text;
+        }
+      });
+    }
+    // Remove openSummarizer query parameter
+    if (route.query.openSummarizer) {
+      const query = { ...route.query };
+      delete query.openSummarizer;
+      router.replace({ query });
+    }
+    isDialogOpen.value = false;
+  } catch (error) {
+    console.error('Error processing summarization:', error);
+    alert('Failed to process summarization.');
+  } finally {
+    isSummarizing.value = false;
+  }
+};
+
+// Default welcome page data
+const defaultWelcomePage = {
+  id: 1,
+  title: 'Getting Started',
+  blocks: [
+    {
+      id: 1,
+      text: `# Welcome to Gravin Notebook
+
+Gravin Notebook is your markdown-powered tool for organizing ideas, notes, and projects with ease.
+
+## What You Can Do
+- **Markdown Support**: Write notes with rich formatting using markdown. Create headers, lists, code blocks, tables, and more.
+- **Block Editing**: Click any text block to edit it in the right sidebar’s textbox. Your changes sync instantly.
+- **Style Buttons**: Use formatting buttons in the sidebar to apply styles like bold, italic, or code to selected text.
+- **AI Summarizer**: Upload PDFs and get concise summaries powered by AI, added as editable blocks.
+- **Organize with Pages**: Create multiple pages within a notebook to structure your content.
+
+## How It Works
+1. **Create or Open a Notebook**: Go to “Your Notebooks” to create a new notebook or open an existing one.
+2. **Add and Edit Blocks**: Click “Add Block” to insert text blocks. Edit content in the right sidebar with markdown styles.
+3. **Use AI Summarizer**: Click the “AI Summarizer” button, upload a PDF, and add an optional prompt to generate a summary block.
+
+Start exploring by editing this page, adding new blocks, or creating a new notebook from “Your Notebooks”!`
+    }
+  ]
+};
+
+// Computed properties
+const isWelcomeMode = computed(() => !route.query.id);
 const currentPage = computed(() => {
   return notebook.value.pages.find(page => page.id === activePage.value) || notebook.value.pages[0];
 });
-
 const currentBlocks = computed(() => {
   return currentPage.value?.blocks || [];
 });
 
+// Watchers
 watch(() => activeBlock.value, (newId) => {
   if (newId !== null) {
     const block = findBlockById(newId);
@@ -62,6 +118,16 @@ watch(() => activeBlock.value, (newId) => {
   }
 });
 
+watch(() => route.query.openSummarizer, (newValue) => {
+  console.log('Route query openSummarizer:', newValue);
+  if (newValue === 'true' || newValue === true || newValue === '1') {
+    openDialog();
+  } else {
+    isDialogOpen.value = false;
+  }
+}, { immediate: true });
+
+// Editor methods
 const findBlockById = (blockId) => {
   for (const page of notebook.value.pages) {
     const block = page.blocks.find(b => b.id === blockId);
@@ -237,68 +303,76 @@ const loadNotebook = (notebookData) => {
   }
 };
 
-// AI Summarizer Dialog
-const isDialogOpen = ref(false);
-
-const openDialog = () => {
-  isDialogOpen.value = true;
-};
-
-const handleSummarizeSubmit = async ({ file, prompt }) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('prompt', prompt);
+// Fetch notebook data and verify ownership
+const fetchNotebook = async () => {
+  if (!route.query.id) {
+    // Load default welcome page
+    notebook.value.pages = [defaultWelcomePage];
+    activePage.value = defaultWelcomePage.id;
+    isLoading.value = false;
+    return;
+  }
+  isLoading.value = true;
   try {
-    // Mock backend submission
-    console.log('Submitting to backend:', { file: file.name, prompt });
-    // Replace with actual endpoint
-    // const res = await fetch('/api/summarize', { method: 'POST', body: formData });
-    // const { summary } = await res.json();
-    const mockSummary = `Mock AI Summary for ${file.name}:\nThis is a sample summary generated for testing purposes.`;
-    if (currentPage.value) {
-      const newId = getNextBlockId();
-      currentPage.value.blocks.push({
-        id: newId,
-        text: `## AI Summary\n\n${mockSummary}`
-      });
-      nextTick(() => {
-        activeBlock.value = newId;
-        const block = findBlockById(newId);
-        if (block) {
-          currentTextboxText.value = block.text;
-        }
-      });
+    const access = localStorage.getItem('access');
+    if (!access) throw new Error('No authentication token found');
+    const response = await fetch('https://ccs8finalproj-production.up.railway.app/notebook/get/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${access}`
+      }
+    });
+    const data = await response.json();
+    if (response.ok && data.status === 200 && data.notebooks) {
+      ownedNotebookIds.value = data.notebooks.map(n => n['notebook ID']);
+      const notebookId = parseInt(route.query.id, 10);
+      if (!ownedNotebookIds.value.includes(notebookId)) {
+        console.warn(`Notebook ID ${notebookId} not owned by user`);
+        router.push('/');
+        return;
+      }
+      const apiNotebook = data.notebooks.find(n => n['notebook ID'] === notebookId);
+      if (apiNotebook) {
+        notebook.value = {
+          id: apiNotebook['notebook ID'],
+          title: apiNotebook.title,
+          pages: apiNotebook.pages.map(page => ({
+            id: page['page ID'],
+            title: page.title,
+            blocks: page.blocks.map(block => ({
+              id: block['block ID'],
+              text: block.content
+            }))
+          })),
+          userdata: {},
+          lastSaved: null
+        };
+        activePage.value = notebook.value.pages[0]?.id ?? null;
+      } else {
+        throw new Error('Notebook not found');
+      }
+    } else {
+      throw new Error('Invalid notebook data');
     }
   } catch (error) {
-    console.error('Error submitting summarization:', error);
-    alert('Failed to submit summarization.');
+    console.warn('API fetch failed:', error);
+    router.push('/');
+  } finally {
+    isLoading.value = false;
   }
 };
 
-onMounted(async () => {
-  try {
-    const res = await fetch('/api/user/notebook');
-    const notebookData = await res.json();
-    if (notebookData && Array.isArray(notebookData.pages)) {
-      notebook.value = {
-        ...notebook.value,
-        ...notebookData
-      };
-      activePage.value = notebook.value.pages[0]?.id ?? null;
-    } else {
-      console.warn("Invalid notebook data. Using default.");
-    }
-  } catch (e) {
-    console.warn('API fetch failed, using default notebook data.');
-  }
+// Initialize
+onMounted(() => {
+  fetchNotebook();
   document.addEventListener('save-notebook', () => {
     saveNotebook();
   });
-  // Auto-open dialog if query param exists
-  const route = useRoute();
-  if (route.query.openSummarizer === 'true') {
+  document.addEventListener('open-ai-summarizer', () => {
+    console.log('Received open-ai-summarizer event from NavBar');
     openDialog();
-  }
+  });
 });
 
 provide('notebook', notebook);
@@ -309,9 +383,16 @@ provide('deletePage', deletePage);
 </script>
 
 <template>
-  <div class="main-container">
+  <div class="min-h-screen bg-gray-100 main-container">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex items-center justify-center min-h-screen bg-gray-100">
+      <div class="text-center">
+        <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-t-[#BD93F9] border-gray-200"></div>
+        <p class="text-gray-600 mt-2">Loading notebook...</p>
+      </div>
+    </div>
     <!-- Mobile Layout -->
-    <div v-if="isMobile" class="mobile-container">
+    <div v-else-if="isMobile" class="mobile-container">
       <EditorNavBar 
         :title="notebook.title" 
         @update-title="updateNotebookTitle"
@@ -400,7 +481,6 @@ provide('deletePage', deletePage);
         </div>
       </div>
     </div>
-
     <!-- Desktop Layout -->
     <div v-else class="desktop-container">
       <EditorNavBar 
@@ -496,6 +576,7 @@ provide('deletePage', deletePage);
     <!-- AI Summarizer Dialog -->
     <AISummarizerDialog
       :is-open="isDialogOpen"
+      :is-summarizing="isSummarizing"
       @update:isOpen="isDialogOpen = $event"
       @submit="handleSummarizeSubmit"
     />
@@ -620,7 +701,7 @@ html, body {
 .blocks-container {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem; /* Reduced from 0.5rem (8px) to 0.25rem (4px) */
+  gap: 0.25rem;
 }
 
 /* Block */
@@ -734,7 +815,7 @@ html, body {
 .blocks-container-desktop {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* Reduced from 1rem (16px) to 0.5rem (8px) */
+  gap: 0.5rem;
 }
 
 .block-desktop {

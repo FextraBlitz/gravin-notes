@@ -1,0 +1,13 @@
+fetch('https://ccs8finalproj-production.up.railway.app/notebook/delete/', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer <token> //add token here
+  },
+  body: JSON.stringify({
+    notebook_ID: 11
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));

@@ -14,6 +14,8 @@ const sidebarRef = ref(null)
 const cursorStyle = ref('default')
 let isResizing = false
 const RESIZE_MARGIN = 10
+const MIN_WIDTH = 200
+const MAX_WIDTH = 600
 
 const props = defineProps({
   modelValue: String,
@@ -50,29 +52,31 @@ watch(() => props.id, () => {
 const handleInput = (event) => {
   if (props.id !== null && props.id !== undefined) {
     const newValue = event.target.value
+    localValue.value = newValue
     emit('update:modelValue', newValue)
+    console.log('Text input:', { id: props.id, value: newValue })
   }
 }
 
 const checkStartResize = (e) => {
   if (isMobile || !sidebarRef.value) return
   const rect = sidebarRef.value.getBoundingClientRect()
-  const offsetX = rect.right - e.clientX
-  if (offsetX <= RESIZE_MARGIN) {
+  const offsetX = rect.left - e.clientX
+  if (offsetX >= -RESIZE_MARGIN && offsetX <= 0) {
     e.preventDefault()
     isResizing = true
     document.body.classList.add('no-select')
     document.addEventListener('mousemove', resize)
     document.addEventListener('mouseup', stop)
-    console.log('Right resize started', { offsetX, rectRight: rect.right })
+    console.log('Right resize started', { offsetX, rectLeft: rect.left })
   }
 }
 
 const checkCursor = (e) => {
   if (isMobile || !sidebarRef.value) return
   const rect = sidebarRef.value.getBoundingClientRect()
-  const offsetX = rect.right - e.clientX
-  cursorStyle.value = (offsetX <= RESIZE_MARGIN) ? 'ew-resize' : 'default'
+  const offsetX = rect.left - e.clientX
+  cursorStyle.value = (offsetX >= -RESIZE_MARGIN && offsetX <= 0) ? 'ew-resize' : 'default'
 }
 
 const resetCursor = () => {
@@ -80,10 +84,12 @@ const resetCursor = () => {
 }
 
 const resize = (e) => {
-  if (isResizing) {
-    const windowWidth = window.innerWidth
-    const newWidth = Math.min(500, Math.max(200, windowWidth - e.clientX))
+  if (isResizing && sidebarRef.value) {
+    const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - e.clientX))
     setWidth.value = newWidth
+    requestAnimationFrame(() => {
+      sidebarRef.value.style.width = `${newWidth}px`
+    })
     console.log('Right resizing', { newWidth, clientX: e.clientX })
   }
 }
@@ -96,34 +102,78 @@ const stop = () => {
   console.log('Right resize stopped')
 }
 
-const handleBold = () => wrapSelection('**')
-const handleItalic = () => wrapSelection('*')
-const handleStrikethrough = () => wrapSelection('~~')
-const handleInlineCode = () => wrapSelection('`')
-const handleCodeBlock = () => wrapSelection('```\n', '\n```')
-const handleQuote = () => wrapSelection('> ', '', true)
-const handleBulletList = () => wrapSelection('- ', '', true)
-const handleNumberedList = () => wrapSelection('1. ', '', true)
-const handleLink = () => wrapSelection('[', '](url)')
-const handleH1 = () => wrapSelection('# ', '', true)
-const handleH2 = () => wrapSelection('## ', '', true)
-const handleImage = () => wrapSelection('![alt](url)', '', true)
-const handleHr = () => wrapSelection('\n---\n', '')
+const handleBold = () => {
+  console.log('Bold clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('**')
+}
+const handleItalic = () => {
+  console.log('Italic clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('*')
+}
+const handleStrikethrough = () => {
+  console.log('Strikethrough clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('~~')
+}
+const handleInlineCode = () => {
+  console.log('InlineCode clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('`')
+}
+const handleCodeBlock = () => {
+  console.log('CodeBlock clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('```\n', '\n```')
+}
+const handleQuote = () => {
+  console.log('Quote clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('> ', '', true)
+}
+const handleBulletList = () => {
+  console.log('BulletList clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('- ', '', true)
+}
+const handleNumberedList = () => {
+  console.log('NumberedList clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('1. ', '', true)
+}
+const handleLink = () => {
+  console.log('Link clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('[', '](url)')
+}
+const handleH1 = () => {
+  console.log('H1 clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('# ', '', true)
+}
+const handleH2 = () => {
+  console.log('H2 clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('## ', '', true)
+}
+const handleImage = () => {
+  console.log('Image clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('![alt](url)', '', true)
+}
+const handleHr = () => {
+  console.log('Hr clicked', { id: props.id, selection: refInput.value?.selectionStart })
+  wrapSelection('\n---\n', '')
+}
 
 function wrapSelection(before, after = before, multiline = false) {
   const el = refInput.value
-  if (!el) return
+  if (!el || props.id === null || props.id === undefined) {
+    console.warn('Cannot wrap selection: No textarea or invalid block ID', { el, id: props.id })
+    return
+  }
 
   const start = el.selectionStart
   const end = el.selectionEnd
   const fullText = localValue.value
   const selected = fullText.slice(start, end)
 
+  console.log('Wrapping selection', { start, end, selected, before, after, multiline })
+
   const hasWrapper = selected.startsWith(before) && selected.endsWith(after)
   let newText, cursorStart, cursorEnd
 
   if (!multiline) {
-    if (hasWrapper) {
+    if (hasWrapper && after !== '') {
       newText = fullText.slice(0, start) +
         selected.slice(before.length, selected.length - after.length) +
         fullText.slice(end)
@@ -148,7 +198,8 @@ function wrapSelection(before, after = before, multiline = false) {
   }
 
   localValue.value = newText
-  emit('update:modelValue', localValue.value)
+  emit('update:modelValue', newText)
+  console.log('Emitted new text', { newText, cursorStart, cursorEnd })
 
   nextTick(() => {
     el.focus()
@@ -169,7 +220,7 @@ onMounted(() => {
 <template>
   <div
     ref="sidebarRef"
-    :class="{ 'sidebar-container': true, 'mobile-sidebar': isMobile }"
+    :class="{ 'sidebar-container': true, 'mobile-sidebar': isMobile, 'is-resizing': isResizing }"
     :style="!isMobile ? { width: setWidth + 'px', cursor: cursorStyle } : {}"
     @mousemove="checkCursor"
     @mouseleave="resetCursor"
@@ -270,11 +321,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  min-width: 200px;
+  max-width: 600px;
+  transition: width 0.2s ease;
 }
 
 /* Disable transition during resize */
-.sidebar-container:not(.is-resizing) {
-  transition: width 0.2s ease;
+.sidebar-container.is-resizing {
+  transition: none;
 }
 
 .mobile-sidebar {
@@ -286,7 +340,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   z-index: 100;
-  padding: 0; /* Ensure no padding */
+  padding: 0;
 }
 
 /* Desktop Styling */
@@ -301,7 +355,7 @@ onMounted(() => {
 
 /* Resize Handle */
 .resize-handle {
-  width: 4px;
+  width: 6px;
   background-color: #f3e8ff;
   opacity: 0.3;
   cursor: ew-resize;
@@ -321,7 +375,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0; /* Remove padding for full width */
+  padding: 0;
 }
 
 /* Header */
@@ -411,7 +465,7 @@ onMounted(() => {
   overflow-x: auto;
   gap: 0.5rem;
   padding: 0 0.5rem;
-  width: 100%; /* Ensure full width */
+  width: 100%;
 }
 
 /* Toolbar Button */
@@ -419,12 +473,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem;
+  padding: 0.5rem;
   border-radius: 0.375rem;
   background-color: white;
   transition: all 0.15s ease;
   font-size: 0.875rem;
   min-width: 2.5rem;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .toolbar-button:hover {
@@ -432,13 +488,43 @@ onMounted(() => {
   color: #BD93F9;
 }
 
+/* Desktop Button Borders (Vertical Gradient) */
+@media (min-width: 769px) {
+  .toolbar-button {
+    border-image: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(209, 213, 219, 0.5) 20%,
+      rgba(209, 213, 219, 0.5) 80%,
+      transparent
+    ) 1;
+    border-width: 1px;
+    border-style: solid;
+  }
+}
+
+/* Mobile Button Borders (Horizontal Gradient) */
+@media (max-width: 768px) {
+  .toolbar-button {
+    border-image: linear-gradient(
+      to right,
+      transparent,
+      rgba(209, 213, 219, 0.5) 20%,
+      rgba(209, 213, 219, 0.5) 80%,
+      transparent
+    ) 1;
+    border-width: 1px;
+    border-style: solid;
+  }
+}
+
 /* Editor */
 .editor {
   flex-grow: 1;
   background-color: #f9f9f9;
   width: 100%;
-  margin: 0; /* Remove margin */
-  padding: 0.5rem 0; /* Vertical padding only */
+  margin: 0;
+  padding: 0.5rem 0.25rem;
   box-sizing: border-box;
   resize: none;
   border-radius: 0 0 0.375rem 0.375rem;

@@ -1,53 +1,58 @@
 ```vue
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue'
 
 const props = defineProps({
-  id: {
-    type: Number,
-    required: true
-  },
-  title: {
-    type: String,
-    required: true
-  },
-  pageCount: {
-    type: Number,
-    required: true
-  },
-  lastSaved: {
-    type: String,
-    required: true
+  notebook: {
+    type: Object,
+    required: true,
+    validator: (notebook) => 'id' in notebook && 'title' in notebook && 'pageTitles' in notebook
   }
-});
+})
 
-const emit = defineEmits(['delete']);
+const emit = defineEmits(['delete'])
 
-// Format last saved date
-const formattedLastSaved = computed(() => {
-  const date = new Date(props.lastSaved);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-});
+onMounted(() => {
+  console.log('NotebookCard mounted', {
+    notebook: props.notebook,
+    id: props.notebook.id,
+    pageTitles: props.notebook.pageTitles
+  })
+})
 
-// Handle delete click
+const pageCount = computed(() => {
+  const count = props.notebook.pageTitles?.length || 0
+  console.log('Computed pageCount', { count })
+  return count
+})
+
+const displayTitles = computed(() => {
+  const titles = props.notebook.pageTitles || []
+  const maxTitles = 2
+  const result = titles.length > maxTitles ? [...titles.slice(0, maxTitles), '...'] : titles
+  console.log('Computed displayTitles', { titles, result })
+  return result
+})
+
 const handleDelete = () => {
-  emit('delete', props.id, props.title);
-};
+  console.log('Delete clicked', { id: props.notebook.id, title: props.notebook.title })
+  emit('delete', props.notebook.id, props.notebook.title)
+}
 </script>
 
 <template>
-  <article
-    class="bg-white rounded-md shadow-lg p-3 sm:p-4 relative w-full max-w-[95%] sm:w-80 mx-auto transition-transform hover:scale-[1.02] border-1 sm:border-2 border-purple-600 hover:border-purple-700 hover:shadow-purple-200"
+  <NuxtLink
+    :to="`/editor/${props.notebook.id}`"
+    class="block w-full max-w-[95%] sm:w-80 bg-white rounded-md shadow-lg p-3 sm:p-4 relative transition-transform hover:scale-[1.02] border-1 sm:border-2 border-purple-600 hover:border-purple-700 hover:shadow-purple-200"
+    role="link"
+    :aria-label="`Open notebook: ${props.notebook.title || 'Untitled Notebook'}`"
+    @click="console.log('Navigating to', `/editor/${props.notebook.id}`)"
   >
     <!-- Delete Icon -->
     <button
-      @click="handleDelete"
+      @click.stop="handleDelete"
       class="absolute top-2 right-2 p-1 rounded-full hover:bg-red-100 transition-colors"
-      :aria-label="`Delete notebook with title ${title}`"
+      :aria-label="`Delete notebook with title ${props.notebook.title || 'Untitled Notebook'}`"
     >
       <img
         src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trash-2.svg"
@@ -57,15 +62,21 @@ const handleDelete = () => {
     </button>
     <!-- Notebook Details -->
     <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate mb-2">
-      {{ title }}
+      {{ props.notebook.title || 'Untitled Notebook' }}
     </h2>
-    <p class="text-sm sm:text-base text-gray-600">
+    <p class="text-sm sm:text-base text-gray-600 mb-1">
       Pages: {{ pageCount }}
     </p>
-    <p class="text-sm sm:text-base text-gray-600">
-      Last Saved: {{ formattedLastSaved }}
-    </p>
-  </article>
+    <ul class="text-sm sm:text-base text-gray-600">
+      <li
+        v-for="(title, index) in displayTitles"
+        :key="index"
+        class="truncate"
+      >
+        {{ title }}
+      </li>
+    </ul>
+  </NuxtLink>
 </template>
 
 <style scoped>

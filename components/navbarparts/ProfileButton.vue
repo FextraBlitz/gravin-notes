@@ -33,7 +33,7 @@
         Settings
       </NuxtLink>
       <NuxtLink 
-        to="/notes" 
+        to="/your-notes" 
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
       >
         My Notes

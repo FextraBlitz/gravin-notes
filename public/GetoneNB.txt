@@ -1,0 +1,13 @@
+fetch('http://127.0.0.1:8000/notebook/getNB/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer <token>' //add token here
+  },
+  body: JSON.stringify({
+    notebook_ID: 12
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));

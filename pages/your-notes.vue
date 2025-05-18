@@ -1,74 +1,79 @@
 ```vue
 <script setup>
-import { ref, inject } from 'vue';
-import NotebookCard from '~/components/notebooks/NotebookCard.vue';
+import { ref, onMounted } from 'vue'
+import NotebookCard from '~/components/notebooks/NotebookCard.vue'
+import NewNotebookCard from '~/components/notebooks/NewNotebookCard.vue'
 
-// Inject isMobile from parent (like index.vue)
-const isMobile = inject('isMobile');
+const notebooks = ref([])
+const isLoading = ref(true)
 
-// Dummy notebook data
-const notebooks = ref([
-  { id: 1, title: 'Project Notes', pageCount: 3, lastSaved: '2025-05-15T10:00:00Z' },
-  { id: 2, title: 'Meeting Summaries', pageCount: 5, lastSaved: '2025-05-14T14:30:00Z' },
-  { id: 3, title: 'Research Ideas', pageCount: 2, lastSaved: '2025-05-13T09:15:00Z' },
-  { id: 4, title: 'Personal Journal', pageCount: 8, lastSaved: '2025-05-12T18:45:00Z' },
-  { id: 5, title: 'Study Guide', pageCount: 4, lastSaved: '2025-05-11T11:20:00Z' },
-]);
-
-// Handle delete with confirmation
-const handleDelete = (id, title) => {
-  if (window.confirm(`Are you sure you want to delete the notebook "${title}"? This cannot be undone.`)) {
-    notebooks.value = notebooks.value.filter(notebook => notebook.id !== id);
-    console.log(`Deleted notebook with ID ${id}`); // Mock backend call
-    // TODO: Replace with actual backend API call, e.g.:
-    // await fetch(`/api/notebooks/${id}`, { method: 'DELETE' });
+const fetchNotebooks = async () => {
+  isLoading.value = true
+  try {
+    const access = localStorage.getItem('access')
+    if (!access) throw new Error('No authentication token found')
+    const response = await fetch('https://ccs8finalproj-production.up.railway.app/notebook/get/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${access}`
+      }
+    })
+    const data = await response.json()
+    if (response.ok && data.status === 200 && data.notebooks) {
+      notebooks.value = data.notebooks.map(notebook => ({
+        id: notebook['notebook ID'],
+        title: notebook.title,
+        pageTitles: notebook.pages.map(page => page.title)
+      }))
+      console.log('Notebooks fetched', { notebooks: notebooks.value })
+    } else {
+      throw new Error('Invalid notebook data')
+    }
+  } catch (error) {
+    console.error('Error fetching notebooks:', error)
+    notebooks.value = [
+      {
+        id: 1,
+        title: 'Science Notebook',
+        pageTitles: ['Atoms and Molecules, Hello']
+      }
+    ]
+  } finally {
+    isLoading.value = false
   }
-};
+}
+
+onMounted(() => {
+  fetchNotebooks()
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 p-4 sm:p-6">
-    <!-- Header -->
-    <h1 class="text-xl sm:text-2xl font-semibold text-gray-800 text-center mb-6 sm:mb-8">
-      Your Notebooks
-    </h1>
-    <!-- Notebook List -->
-    <div
-      class="max-w-7xl mx-auto"
-      :class="isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'"
-    >
-      <NotebookCard
-        v-for="notebook in notebooks"
-        :key="notebook.id"
-        :id="notebook.id"
-        :title="notebook.title"
-        :page-count="notebook.pageCount"
-        :last-saved="notebook.lastSaved"
-        @delete="handleDelete"
-      />
+  <div class="min-h-screen bg-gray-100">
+    <Navbar />
+    <div class="container mx-auto p-4 sm:p-6">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800 text-center">Your Notebooks</h1>
+      <div v-if="isLoading" class="flex justify-center items-center h-64">
+        <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-t-[#BD93F9] border-gray-200"></div>
+      </div>
+      <div v-else-if="notebooks.length === 0" class="text-center text-gray-600">
+        <p class="text-lg">No notebooks found. Create a new one to get started!</p>
+      </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <NotebookCard
+          v-for="notebook in notebooks"
+          :key="notebook.id"
+          :notebook="notebook"
+          class="cursor-pointer"
+        />
+        <NewNotebookCard />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #BD93F9;
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #A775F0;
-}
-
 /* Focus outline for accessibility */
 *:focus-visible {
   outline: 2px solid #9580FF;

@@ -94,7 +94,7 @@
         </NuxtLink>
         <!-- Navigation Links -->
         <nav class="flex gap-8 text-gray-600 font-medium">
-          <NuxtLink to="/ai-summarizer" class="hover:text-purple-600 transition-colors duration-200 relative group">
+          <NuxtLink to="/editor?openSummarizer=true" class="hover:text-purple-600 transition-colors duration-200 relative group">
             AI Summarizer
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></span>
           </NuxtLink>

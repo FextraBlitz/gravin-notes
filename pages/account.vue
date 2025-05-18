@@ -1,7 +1,7 @@
 ```vue
 <script setup>
 import { ref, computed, inject, watch, onMounted } from 'vue';
-import { useRouter, useFetch } from '#app';
+import { useRouter } from '#app';
 
 console.log('Account page setup');
 
@@ -106,16 +106,45 @@ const saveProfile = async () => {
   isSaving.value = true;
   saveSuccess.value = false;
   try {
-    await store.updateUser(store.user.value);
-    initialState.value = { ...store.user.value };
-    console.log('Profile updated:', store.user.value);
-    saveSuccess.value = true;
-    setTimeout(() => {
-      saveSuccess.value = false;
-    }, 3000);
+    const access = localStorage.getItem('access');
+    if (!access) throw new Error('No authentication token found');
+    const response = await fetch('https://ccs8finalproj-production.up.railway.app/accounts/manage/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${access}`
+      },
+      body: JSON.stringify({
+        username: store.user.value.username,
+        email: store.user.value.email,
+        phone: store.user.value.contact || '',
+        school: store.user.value.school || '',
+        address: store.user.value.address || ''
+      })
+    });
+    const data = await response.json();
+    if (response.ok && data.status === 200) {
+      // Update store and localStorage
+      store.user.value = {
+        username: data.user?.username || store.user.value.username,
+        email: data.user?.email || store.user.value.email,
+        contact: data.user?.phone || store.user.value.contact,
+        address: data.user?.address || store.user.value.address,
+        school: data.user?.school || store.user.value.school
+      };
+      localStorage.setItem('user', JSON.stringify(store.user.value));
+      initialState.value = { ...store.user.value };
+      console.log('Profile updated:', store.user.value);
+      saveSuccess.value = true;
+      setTimeout(() => {
+        saveSuccess.value = false;
+      }, 3000);
+    } else {
+      throw new Error(data.message || 'Failed to update profile');
+    }
   } catch (err) {
     console.error('Error saving profile:', err);
-    errors.value.form = 'Failed to save profile. Please try again.';
+    errors.value.form = err.message || 'Failed to save profile. Please try again.';
   } finally {
     isSaving.value = false;
   }

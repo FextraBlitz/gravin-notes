@@ -19,10 +19,11 @@ function updateDeviceType() {
   isMobile.value = window.innerWidth <= 768;
 }
 
-// User state
+// User and notebook state
 const user = ref(null);
 const isAuthenticated = ref(false);
 const isLoading = ref(true);
+const notebooks = ref([]);
 
 // Navigation state
 const lastVisitedPage = ref('/');
@@ -148,29 +149,65 @@ const storeActions = {
     }
   },
 
+  async fetchNotebooks() {
+    try {
+      const access = localStorage.getItem('access');
+      if (!access) throw new Error('No authentication token found');
+      const response = await fetch('https://ccs8finalproj-production.up.railway.app/notebook/get/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access}`
+        }
+      });
+      const data = await response.json();
+      console.log('API Response:', data); // For debugging
+      if (response.ok && data.status === 200) {
+        notebooks.value = (data.notebooks || []).map(notebook => ({
+          id: notebook['notebook ID'],
+          title: notebook.title,
+          pageCount: notebook.pages ? notebook.pages.length : 0,
+          pageTitles: notebook.pages ? notebook.pages.map(page => page.title) : []
+        }));
+        return notebooks.value;
+      }
+      throw new Error(data.message || 'Failed to fetch notebooks');
+    } catch (err) {
+      console.error('Error fetching notebooks:', err);
+      throw new Error(err.message || 'Failed to fetch notebooks');
+    }
+  },
+
   async updateUser(userData) {
     try {
       const access = localStorage.getItem('access');
       if (!access) throw new Error('No authentication token found');
-      const response = await fetch('/api/user', {
-        method: 'PUT',
+      const response = await fetch('https://ccs8finalproj-production.up.railway.app/accounts/manage/', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${access}`
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify({
+          username: userData.username,
+          email: userData.email,
+          phone: userData.contact || '',
+          address: userData.address || '',
+          school: userData.school || ''
+        })
       });
       const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        user.value = {
-          username: data.user.username,
-          email: data.user.email,
-          contact: data.user.contact || '',
-          address: data.user.address || '',
-          school: data.user.school || ''
+      if (response.ok && data.status === 200) {
+        const updatedUser = {
+          username: data.user?.username || userData.username,
+          email: data.user?.email || userData.email,
+          contact: data.user?.phone || userData.contact,
+          address: data.user?.address || userData.address,
+          school: data.user?.school || userData.school
         };
-        return data.user;
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        user.value = updatedUser;
+        return updatedUser;
       }
       throw new Error(data.message || 'Failed to update profile');
     } catch (err) {
@@ -185,6 +222,7 @@ const storeActions = {
     localStorage.removeItem('access');
     localStorage.removeItem('refresh');
     localStorage.removeItem('user');
+    notebooks.value = [];
     router.push('/');
   }
 };
@@ -203,6 +241,9 @@ onMounted(() => {
   
   storeActions.fetchCurrentUser().then(() => {
     console.log('User fetch completed');
+    if (isAuthenticated.value) {
+      storeActions.fetchNotebooks();
+    }
     if (!lastVisitedPage.value && !['/login', '/signup'].includes(route.fullPath)) {
       storeActions.setLastVisitedPage(route.fullPath);
     }
@@ -233,6 +274,7 @@ provide('store', {
   isLoggedIn,
   userName,
   userEmail,
+  notebooks,
   ...storeActions,
 });
 defineExpose({ handleAuthSuccess });
