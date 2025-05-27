@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, watch, onMounted, nextTick, computed, provide } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -33,13 +32,14 @@ const currentTextboxText = ref('');
 const isDialogOpen = ref(false);
 const ownedNotebookIds = ref([]);
 
-// AI Summarizer Dialog (moved before watch)
+// AI Summarizer Dialog
 const openDialog = () => {
-  console.log('Opening AI Summarizer dialog');
+  console.log('openDialog called');
   isDialogOpen.value = true;
 };
 
 const handleSummarizeSubmit = async ({ summary }) => {
+  console.log('handleSummarizeSubmit called with summary:', summary);
   isSummarizing.value = true;
   try {
     if (currentPage.value) {
@@ -110,6 +110,7 @@ const currentBlocks = computed(() => {
 
 // Watchers
 watch(() => activeBlock.value, (newId) => {
+  console.log('activeBlock changed:', newId);
   if (newId !== null) {
     const block = findBlockById(newId);
     currentTextboxText.value = block?.text || '';
@@ -119,7 +120,7 @@ watch(() => activeBlock.value, (newId) => {
 });
 
 watch(() => route.query.openSummarizer, (newValue) => {
-  console.log('Route query openSummarizer:', newValue);
+  console.log('Route query openSummarizer changed:', newValue);
   if (newValue === 'true' || newValue === true || newValue === '1') {
     openDialog();
   } else {
@@ -365,12 +366,14 @@ const fetchNotebook = async () => {
 
 // Initialize
 onMounted(() => {
+  console.log('[[id]].vue mounted');
   fetchNotebook();
   document.addEventListener('save-notebook', () => {
+    console.log('save-notebook event received');
     saveNotebook();
   });
   document.addEventListener('open-ai-summarizer', () => {
-    console.log('Received open-ai-summarizer event from NavBar');
+    console.log('open-ai-summarizer event received');
     openDialog();
   });
 });
@@ -887,4 +890,3 @@ html, body {
   }
 }
 </style>
-```

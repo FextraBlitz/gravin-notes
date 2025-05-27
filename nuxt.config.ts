@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: false },
+  devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   pages: true,
   modules: [
@@ -22,10 +22,16 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
-  hooks: {
-    'pages:extend'(pages) {
-      console.log(pages);
-    },
+  // hooks: {
+  //   'pages:extend'(pages) {
+  //     console.log(pages);
+  //   },
+  // },
+  runtimeConfig: {
+    public: {
+      // Other public vars...
+      xaiApiKey: process.env.XAI_API_KEY || ''
+    }
   },
 });
 
