@@ -67,6 +67,7 @@
           Editor
         </NuxtLink>
         <NuxtLink 
+          v-if="isLoggedIn"
           to="/your-notes" 
           class="py-3 border-b border-gray-100 text-gray-600 hover:text-purple-500 transition-colors duration-200 mobile-nav-link"
           @click="closeMenu"
@@ -102,7 +103,11 @@
             Editor
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></span>
           </NuxtLink>
-          <NuxtLink to="/your-notes" class="hover:text-purple-600 transition-colors duration-200 relative group">
+          <NuxtLink 
+            v-if="isLoggedIn"
+            to="/your-notes" 
+            class="hover:text-purple-600 transition-colors duration-200 relative group"
+          >
             My Notes
             <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></span>
           </NuxtLink>

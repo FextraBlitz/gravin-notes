@@ -24,24 +24,62 @@
             <p class="text-lg sm:text-xl md:text-2xl text-gray-200 font-light mb-8">
               A minimalist writing experience with simple formatting and save features.
             </p>
-            <div class="flex justify-center">
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
               <button 
                 @click="navigateToEditor"
-                class="bg-white text-gray-900 px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer"
+                class="bg-purple-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-medium hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer flex items-center gap-2"
               >
-                Try Demo
+                <img
+                  src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/edit-2.svg"
+                  alt="Edit icon"
+                  class="h-5 w-5 icon-white"
+                >
+                Try Editor
+              </button>
+              <button 
+                @click="openVideoDialog"
+                class="bg-gray-500 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-medium hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 shadow-lg cursor-pointer flex items-center gap-2"
+              >
+                <img
+                  src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/play.svg"
+                  alt="Play icon"
+                  class="h-5 w-5 icon-white"
+                >
+                View 30 Second Demo
               </button>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- Video Dialog -->
+      <div
+        v-if="isVideoDialogOpen"
+        class="fixed-bg fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center"
+        @click="closeVideoDialog"
+        role="dialog"
+        aria-label="Video Demo"
+      >
+        <div
+          class="bg-white rounded-lg p-0 m-0 overflow-hidden"
+          @click.stop
+        >
+          <video
+            controls
+            autoplay
+            class="w-full max-w-[90vw] max-h-[80vh] object-contain no-filter"
+          >
+            <source src="/videos/notebook-banner.mp4" type="video/mp4">
+            <img src="/images/notebook-banner-fallback.jpg" alt="Markdown notebook interface" class="no-filter">
+          </video>
+        </div>
+      </div>
+
       <!-- Features Section -->
       <section class="py-16 sm:py-24 bg-gray-100">
         <div class="container mx-auto px-4 sm:px-6 max-w-6xl">
           <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 sm:mb-16 tracking-tight">Key Features</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-            <!-- Feature Cards -->
             <div class="p-6 sm:p-8 bg-white rounded-xl transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-gray-300 hover:transform hover:-translate-y-1 group">
               <div class="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 sm:w-8 sm:h-8">
@@ -54,7 +92,6 @@
                 without consuming excessive resources.
               </p>
             </div>
-            <!-- Markdown Card -->
             <div class="p-6 sm:p-8 bg-white rounded-xl transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-gray-300 hover:transform hover:-translate-y-1 group">
               <div class="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 sm:w-8 sm:h-8">
@@ -67,7 +104,6 @@
                 extensions for tables, footnotes, and mathematical equations.
               </p>
             </div>
-            <!-- Offline Card -->
             <div class="p-6 sm:p-8 bg-white rounded-xl transition-all duration-300 hover:shadow-xl border border-gray-200 hover:border-gray-300 hover:transform hover:-translate-y-1 group">
               <div class="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gray-900 text-white flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 sm:w-8 sm:h-8">
@@ -133,7 +169,7 @@
           </nav>
         </div>
         <div class="border-t border-gray-200 pt-6 sm:pt-8 text-center text-sm text-gray-500">
-          &copy; 2024 Gravin Notebooks. All rights reserved.
+          © 2024 Gravin Notebooks. All rights reserved.
         </div>
       </div>
     </footer>
@@ -142,11 +178,23 @@
 
 <script setup>
 import { useRouter } from '#app';
+import { ref } from 'vue';
 
 const router = useRouter();
+const isVideoDialogOpen = ref(false);
 
 const navigateToEditor = () => {
   router.push('/editor');
+};
+
+const openVideoDialog = () => {
+  isVideoDialogOpen.value = true;
+};
+
+const closeVideoDialog = (event) => {
+  if (event.target.classList.contains('fixed-bg')) {
+    isVideoDialogOpen.value = false;
+  }
 };
 </script>
 
@@ -159,22 +207,31 @@ const navigateToEditor = () => {
 
 .banner {
   position: relative;
-  background-color: #111827; /* gray-900 */
+  background-color: #111827;
 }
 
 button {
   transition: all 0.3s ease;
 }
 
-button:focus {
+button:focus,
+button *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.5); /* gray-300 */
+  box-shadow: none;
 }
 
-/* Smooth transitions */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+.fixed-bg:focus,
+.fixed-bg *:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.icon-white {
+  filter: brightness(0) invert(1);
+}
+
+.no-filter {
+  filter: none !important;
 }
 
 @media (max-width: 640px) {

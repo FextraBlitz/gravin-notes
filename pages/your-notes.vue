@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, onMounted } from 'vue'
 import NotebookCard from '~/components/notebooks/NotebookCard.vue'
@@ -58,7 +57,10 @@ onMounted(() => {
         <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-t-[#BD93F9] border-gray-200"></div>
       </div>
       <div v-else-if="notebooks.length === 0" class="text-center text-gray-600">
-        <p class="text-lg">No notebooks found. Create a new one to get started!</p>
+        <p class="text-lg mb-6">No notebooks found. Create a new one to get started!</p>
+        <div class="flex justify-center">
+          <NewNotebookCard class="max-w-sm" />
+        </div>
       </div>
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <NotebookCard
@@ -67,7 +69,6 @@ onMounted(() => {
           :notebook="notebook"
           class="cursor-pointer"
         />
-        <NewNotebookCard />
       </div>
     </div>
   </div>
@@ -80,4 +81,3 @@ onMounted(() => {
   outline-offset: 2px;
 }
 </style>
-```

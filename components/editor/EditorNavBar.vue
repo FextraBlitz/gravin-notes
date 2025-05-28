@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, computed, inject, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from '#app';
@@ -35,6 +34,7 @@ const isDropdownOpen = ref(false);
 
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
+  isNavDropdownOpen.value = false; // Close nav dropdown if open
 };
 
 const closeDropdown = (event) => {
@@ -79,6 +79,20 @@ const fileInputRef = ref(null);
 
 const triggerFileInput = () => {
   fileInputRef.value.click();
+};
+
+// Navigation dropdown
+const isNavDropdownOpen = ref(false);
+
+const toggleNavDropdown = () => {
+  isNavDropdownOpen.value = !isNavDropdownOpen.value;
+  isDropdownOpen.value = false; // Close save/load dropdown if open
+};
+
+const closeNavDropdown = (event) => {
+  if (isNavDropdownOpen.value && !event.target.closest('.nav-dropdown-container')) {
+    isNavDropdownOpen.value = false;
+  }
 };
 
 // Account button
@@ -139,12 +153,14 @@ watch([isLoggedIn, () => store.userName], ([newLoggedIn, newUserName]) => {
 // Event listeners for dropdowns
 onMounted(() => {
   document.addEventListener('click', closeDropdown);
+  document.addEventListener('click', closeNavDropdown);
   document.addEventListener('click', closeProfileMenu);
   document.addEventListener('click', closeLoginDropdown);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', closeDropdown);
+  document.removeEventListener('click', closeNavDropdown);
   document.removeEventListener('click', closeProfileMenu);
   document.removeEventListener('click', closeLoginDropdown);
 });
@@ -156,9 +172,9 @@ onUnmounted(() => {
     role="banner"
   >
     <div class="flex items-center justify-between px-3 py-2">
-      <!-- Left: Logo and Title -->
+      <!-- Left: Logo, Navigation, and Title -->
       <div class="flex items-center flex-1 min-w-0">
-        <!-- Dropdown Button -->
+        <!-- Save/Load Dropdown Button -->
         <div class="dropdown-container relative">
           <button
             class="flex items-center gap-1 p-1 rounded-full bg-purple-600 hover:bg-purple-700 text-white cursor-pointer shadow-sm transition-colors"
@@ -177,7 +193,7 @@ onUnmounted(() => {
               class="h-4 w-4"
             >
           </button>
-          <!-- Dropdown Menu -->
+          <!-- Save/Load Dropdown Menu -->
           <div
             v-show="isDropdownOpen"
             class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[150] border border-gray-100"
@@ -203,9 +219,57 @@ onUnmounted(() => {
             />
           </div>
         </div>
+        <!-- Navigation Dropdown Button -->
+        <div class="nav-dropdown-container relative ml-2">
+          <button
+            class="flex items-center gap-1 p-1 rounded-full bg-purple-600 hover:bg-purple-700 text-white cursor-pointer shadow-sm transition-colors"
+            @click="toggleNavDropdown"
+            role="button"
+            aria-label="Navigation menu"
+          >
+            <img
+              src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/menu.svg"
+              alt="Menu icon"
+              class="h-5 w-5"
+            >
+            <img
+              src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg"
+              alt="Dropdown icon"
+              class="h-4 w-4"
+            >
+          </button>
+          <!-- Navigation Dropdown Menu -->
+          <div
+            v-show="isNavDropdownOpen"
+            class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[150] border border-gray-100"
+          >
+            <NuxtLink
+              v-if="isLoggedIn"
+              to="/your-notes"
+              @click="isNavDropdownOpen = false"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+            >
+              My Notes
+            </NuxtLink>
+            <NuxtLink
+              to="/editor"
+              @click="isNavDropdownOpen = false"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+            >
+              Editor
+            </NuxtLink>
+            <NuxtLink
+              to="/"
+              @click="isNavDropdownOpen = false"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+            >
+              Home
+            </NuxtLink>
+          </div>
+        </div>
         <!-- Title -->
         <div
-          class="flex-grow ml-2 overflow-x-auto whitespace-nowrap scrollbar-thin max-w-[calc(100%-60px)]"
+          class="flex-grow ml-2 overflow-x-auto whitespace-nowrap scrollbar-thin max-w-[calc(100%-120px)]"
           @click="startEditing"
         >
           <span
@@ -355,4 +419,3 @@ button:hover img[src*="lucide-static"] {
   padding-top: env(safe-area-inset-top);
 }
 </style>
-```
