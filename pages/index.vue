@@ -11,7 +11,7 @@
             playsinline
             class="w-full h-full object-cover opacity-85"
           >
-            <source src="/videos/notebook-banner.mp4" type="video/mp4">
+            <source src="/videos/30s.webm" type="video/webm">
             <img src="/images/notebook-banner-fallback.jpg" alt="Markdown notebook interface">
           </video>
           <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-gray-900/10"></div>
@@ -69,7 +69,7 @@
             autoplay
             class="w-full max-w-[90vw] max-h-[80vh] object-contain no-filter"
           >
-            <source src="/videos/notebook-banner.mp4" type="video/mp4">
+            <source src="/videos/30s.webm" type="video/webm">
             <img src="/images/notebook-banner-fallback.jpg" alt="Markdown notebook interface" class="no-filter">
           </video>
         </div>
